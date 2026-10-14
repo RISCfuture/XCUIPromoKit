@@ -1,0 +1,3 @@
+retain_public: true
+# Take is encoded to take.json for the host, which reads every property.
+retain_codable_properties: true

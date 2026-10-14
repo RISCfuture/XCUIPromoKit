@@ -1,0 +1,10 @@
+parent_config: https://gist.githubusercontent.com/RISCfuture/c57d132e5e0160a768df1625e20ae3b8/raw/.swiftlint.yml
+
+# XCUIPromoKit is an XCTest helper library and uses XCTest assertions directly.
+# It has no Nimble dependency, so the shared prefer_nimble rule does not apply.
+disabled_rules:
+  - prefer_nimble
+
+excluded:
+  - .build
+  - tooling

@@ -1,0 +1,23 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+
+# Xcode user state
+xcuserdata/
+DerivedData/
+
+# SwiftLint
+.swiftlint/
+
+# swift-format (downloaded in CI)
+.swift-format
+
+# Node
+node_modules/
+
+.claude/settings.local.json
+
+
+# SwiftLint Remote Config Cache
+.swiftlint/RemoteConfigCachesite/

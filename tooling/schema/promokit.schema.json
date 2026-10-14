@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "app": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9-]+$",
+      "description": "Names the simulators this app owns."
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Relative to promokit.json."
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Relative to promokit.json."
+    },
+    "scheme": {
+      "type": "string"
+    },
+    "testPlan": {
+      "description": "The scheme's test plan holding the capture tests, when it isn't the default.",
+      "type": "string"
+    },
+    "buildSettings": {
+      "default": {},
+      "description": "Build settings to override when building and running the capture tests.",
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "locales": {
+      "default": [
+        "en-US"
+      ],
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "brand": {
+      "type": "object",
+      "properties": {
+        "css": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stylesheet defining the --promo-* tokens and fonts."
+        },
+        "assets": {
+          "default": [],
+          "description": "Files and folders brand.css uses.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Relative to promokit.json."
+          }
+        }
+      },
+      "required": [
+        "css"
+      ],
+      "additionalProperties": false
+    },
+    "takes": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "test": {
+            "type": "string",
+            "description": "The -only-testing identifier of the test that plays the take."
+          },
+          "device": {
+            "type": "string",
+            "description": "The simulator device type to film on."
+          },
+          "runtime": {
+            "description": "The simulator runtime to film on, by name or identifier, such as \"iOS 27.0\"; the newest if left out.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "test",
+          "device"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "stills": {
+      "type": "object",
+      "properties": {
+        "test": {
+          "type": "string"
+        },
+        "devices": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "runtime": {
+          "description": "The simulator runtime to film on, by name or identifier, such as \"iOS 27.0\"; the newest if left out.",
+          "type": "string",
+          "minLength": 1
+        },
+        "appearances": {
+          "default": [
+            "light"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "light",
+              "dark"
+            ]
+          }
+        }
+      },
+      "required": [
+        "test",
+        "devices"
+      ],
+      "additionalProperties": false
+    },
+    "mac": {
+      "type": "object",
+      "properties": {
+        "test": {
+          "type": "string"
+        },
+        "size": {
+          "description": "The Mac screenshot canvas, which brand.css lays the window still out in.",
+          "default": "2880x1800",
+          "type": "string",
+          "enum": [
+            "2880x1800",
+            "2560x1600",
+            "1440x900",
+            "1280x800"
+          ]
+        }
+      },
+      "required": [
+        "test"
+      ],
+      "additionalProperties": false
+    },
+    "output": {
+      "description": "Where deliver looks for media, a folder per locale in each.",
+      "default": {},
+      "type": "object",
+      "properties": {
+        "previews": {
+          "default": "../fastlane/previews",
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative to promokit.json."
+        },
+        "screenshots": {
+          "default": "../fastlane/screenshots",
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative to promokit.json."
+        },
+        "macScreenshots": {
+          "default": "../fastlane/screenshots_mac",
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative to promokit.json."
+        },
+        "creatives": {
+          "default": "../fastlane/creative_assets",
+          "description": "Also holds creative_assets.json, listing each placement for deliver.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "creativeNames": {
+      "default": "{id}",
+      "description": "How creative assets are named, before the extension: {slot}, {id}, {width} and {height} are filled in.",
+      "type": "string",
+      "pattern": "^(?:[A-Za-z0-9._-]|\\{(?:slot|id|width|height)\\})+$"
+    }
+  },
+  "required": [
+    "app",
+    "scheme",
+    "brand"
+  ],
+  "additionalProperties": false
+}

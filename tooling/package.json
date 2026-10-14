@@ -1,0 +1,60 @@
+{
+  "name": "xcuipromokit",
+  "version": "1.0.0",
+  "description": "Records App Store promo footage and stills from UI tests, renders them with Remotion, and checks them against Apple's rules.",
+  "license": "MIT",
+  "author": "Tim Morgan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RISCfuture/XCUIPromoKit.git",
+    "directory": "tooling"
+  },
+  "type": "module",
+  "bin": {
+    "promokit": "./bin/promokit.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "schema"
+  ],
+  "scripts": {
+    "schema": "node src/storyboard/writeSchemas.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest"
+  },
+  "engines": {
+    "node": ">=26.7.0"
+  },
+  "packageManager": "pnpm@12.4.2",
+  "dependencies": {
+    "@remotion/bundler": "4.0.535",
+    "@remotion/cli": "4.0.535",
+    "@remotion/renderer": "4.0.535",
+    "@remotion/transitions": "4.0.535",
+    "commander": "^15.0.0",
+    "execa": "^10.1.1",
+    "html-react-parser": "^6.1.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "4.0.535",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^4.1.11"
+  }
+}

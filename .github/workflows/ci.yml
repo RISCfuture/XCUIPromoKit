@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Build and Test
+    # XCUIPromoKit links XCUIApplication/XCUIElement, which ship with Xcode's
+    # XCTest — not the swift.org toolchain or Linux — so build with the runner's
+    # Xcode rather than SwiftyLab/setup-swift, and skip the Linux matrix.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-26]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Record toolchain version
+        id: toolchain
+        run: echo "xcode=$(xcodebuild -version | tr '\n' '-')" >> "$GITHUB_OUTPUT"
+      - name: Cache SwiftPM build products
+        uses: actions/cache@v6
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+          key: swiftpm-tests-${{ matrix.os }}-${{ steps.toolchain.outputs.xcode }}-${{ hashFiles('Package.resolved') }}
+      - name: Build
+        run: swift build -v
+      - name: Test
+        run: swift test -v
+  lint:
+    name: Run SwiftLint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install SwiftLint
+        run: brew install swiftlint
+      - name: Run SwiftLint
+        run: swiftlint --strict
+  swift-format:
+    name: Run swift-format
+    runs-on: ubuntu-latest
+    container:
+      image: swift:latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download .swift-format config
+        run: |
+          apt-get update && apt-get install -y wget
+          wget -O .swift-format https://gist.githubusercontent.com/RISCfuture/e0c21afb7bd80a88d128a42bf40d2ecd/raw/.swift-format
+      - name: Run swift-format lint
+        run: swift format lint --strict -r .
+  documentation:
+    name: Build Documentation
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Record toolchain version
+        id: toolchain
+        run: echo "xcode=$(xcodebuild -version | tr '\n' '-')" >> "$GITHUB_OUTPUT"
+      - name: Cache SwiftPM build products
+        uses: actions/cache@v6
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+          key: swiftpm-docs-macos-latest-${{ steps.toolchain.outputs.xcode }}-${{ hashFiles('Package.resolved') }}
+      - name: Build documentation
+        # The archive is throwaway; Deploy Documentation builds the published
+        # one. This run exists to fail on any DocC warning.
+        run: |
+          swift package \
+            --allow-writing-to-directory "$RUNNER_TEMP/docs" \
+            generate-documentation \
+            --target XCUIPromoKit \
+            --warnings-as-errors \
+            --output-path "$RUNNER_TEMP/docs"
+  tooling:
+    name: Tooling
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tooling
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: tooling/package.json
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: tooling/.nvmrc
+          cache: pnpm
+          cache-dependency-path: tooling/pnpm-lock.yaml
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Check formatting
+        run: pnpm format:check
+      - name: Type-check
+        run: pnpm type-check
+      - name: Test
+        run: pnpm test:unit --run
+      - name: Check the JSON Schemas are current
+        run: |
+          pnpm schema
+          git diff --exit-code -- schema

@@ -1,0 +1,1728 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "previews": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "take": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+            "description": "A take named in promokit.json."
+          },
+          "device": {
+            "type": "string",
+            "enum": [
+              "iphone",
+              "ipad",
+              "mac"
+            ]
+          },
+          "captionEntrance": {
+            "description": "How captions arrive, unless a scene says.",
+            "type": "object",
+            "properties": {
+              "unit": {
+                "default": "caption",
+                "type": "string",
+                "enum": [
+                  "caption",
+                  "word",
+                  "character"
+                ]
+              },
+              "delay": {
+                "default": 0,
+                "description": "Seconds after the scene has arrived, its transition done, before the first unit moves.",
+                "type": "number",
+                "minimum": 0
+              },
+              "duration": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds each unit takes."
+              },
+              "stagger": {
+                "default": 0,
+                "description": "Seconds between one unit and the next.",
+                "type": "number",
+                "minimum": 0
+              },
+              "easing": {
+                "default": "linear",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "linear"
+                  },
+                  {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 4,
+                    "maxItems": 4
+                  }
+                ]
+              },
+              "keyframes": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "at": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "How far through the entrance."
+                    },
+                    "opacity": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "x": {
+                      "description": "Horizontal offset, in em.",
+                      "type": "number"
+                    },
+                    "y": {
+                      "description": "Vertical offset, in em.",
+                      "type": "number"
+                    },
+                    "scale": {
+                      "type": "number"
+                    },
+                    "rotate": {
+                      "description": "Degrees.",
+                      "type": "number"
+                    },
+                    "skew": {
+                      "description": "Horizontal skew, in degrees.",
+                      "type": "number"
+                    },
+                    "blur": {
+                      "description": "Blur radius, in em.",
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "at"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "duration",
+              "keyframes"
+            ],
+            "additionalProperties": false
+          },
+          "taps": {
+            "description": "Marks each tap; left out, taps are not marked.",
+            "type": "object",
+            "properties": {
+              "before": {
+                "type": "number",
+                "minimum": 0
+              },
+              "after": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "poster": {
+            "description": "The frame App Store Connect shows before the preview plays.",
+            "type": "object",
+            "properties": {
+              "scene": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One of the preview’s scenes."
+              },
+              "at": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds after the scene has arrived, its transition done."
+              }
+            },
+            "required": [
+              "scene",
+              "at"
+            ],
+            "additionalProperties": false
+          },
+          "scenes": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "scene": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "A scene recorded in the take."
+                },
+                "stretches": {
+                  "description": "Which stretches to use, in order, each optionally trimmed; all of them if left out.",
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "trim": {
+                            "type": "object",
+                            "properties": {
+                              "start": {
+                                "default": 0,
+                                "description": "Seconds to leave out from the start.",
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "end": {
+                                "default": 0,
+                                "description": "Seconds to leave out from the end.",
+                                "type": "number",
+                                "minimum": 0
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "speed": {
+                            "description": "How fast the stretch plays; real time if left out.",
+                            "type": "object",
+                            "properties": {
+                              "rate": {
+                                "type": "number",
+                                "exclusiveMinimum": 0,
+                                "description": "Times real time."
+                              },
+                              "ramp": {
+                                "default": 0,
+                                "description": "Seconds to reach the rate from real time at the start, and to return at the end.",
+                                "type": "number",
+                                "minimum": 0
+                              }
+                            },
+                            "required": [
+                              "rate"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "index"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "trim": {
+                  "description": "Footage to leave out of either end of the scene as edited.",
+                  "type": "object",
+                  "properties": {
+                    "start": {
+                      "default": 0,
+                      "description": "Seconds to leave out from the start.",
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "end": {
+                      "default": 0,
+                      "description": "Seconds to leave out from the end.",
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "transition": {
+                  "default": {
+                    "type": "cut"
+                  },
+                  "description": "How this scene arrives.",
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "cut"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "dissolve"
+                        },
+                        "duration": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "easing": {
+                          "default": "linear",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "linear"
+                            },
+                            {
+                              "type": "array",
+                              "prefixItems": [
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ],
+                              "items": false,
+                              "minItems": 4,
+                              "maxItems": 4
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "duration"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The next scene fades in over this one."
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "fade"
+                        },
+                        "duration": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "easing": {
+                          "default": "linear",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "linear"
+                            },
+                            {
+                              "type": "array",
+                              "prefixItems": [
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ],
+                              "items": false,
+                              "minItems": 4,
+                              "maxItems": 4
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "duration"
+                      ],
+                      "additionalProperties": false,
+                      "description": "This scene fades out to the background, then the next fades in."
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "slide"
+                        },
+                        "duration": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "direction": {
+                          "type": "string",
+                          "enum": [
+                            "left",
+                            "right",
+                            "up",
+                            "down"
+                          ],
+                          "description": "Which way the content moves."
+                        },
+                        "easing": {
+                          "default": "linear",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "linear"
+                            },
+                            {
+                              "type": "array",
+                              "prefixItems": [
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ],
+                              "items": false,
+                              "minItems": 4,
+                              "maxItems": 4
+                            }
+                          ]
+                        },
+                        "motionBlur": {
+                          "default": 0,
+                          "description": "Peak blur along the motion, as a fraction of the frame along it.",
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "duration",
+                        "direction"
+                      ],
+                      "additionalProperties": false,
+                      "description": "The next scene pushes this one out."
+                    }
+                  ]
+                },
+                "caption": {
+                  "type": "object",
+                  "properties": {
+                    "copy": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+                      "description": "A key in copy.<locale>.json."
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Where the caption's centre sits, from the top."
+                    },
+                    "entrance": {
+                      "description": "Overrides the preview's caption entrance.",
+                      "type": "object",
+                      "properties": {
+                        "unit": {
+                          "default": "caption",
+                          "type": "string",
+                          "enum": [
+                            "caption",
+                            "word",
+                            "character"
+                          ]
+                        },
+                        "delay": {
+                          "default": 0,
+                          "description": "Seconds after the scene has arrived, its transition done, before the first unit moves.",
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "duration": {
+                          "type": "number",
+                          "minimum": 0,
+                          "description": "Seconds each unit takes."
+                        },
+                        "stagger": {
+                          "default": 0,
+                          "description": "Seconds between one unit and the next.",
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "easing": {
+                          "default": "linear",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "linear"
+                            },
+                            {
+                              "type": "array",
+                              "prefixItems": [
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ],
+                              "items": false,
+                              "minItems": 4,
+                              "maxItems": 4
+                            }
+                          ]
+                        },
+                        "keyframes": {
+                          "minItems": 1,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "at": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1,
+                                "description": "How far through the entrance."
+                              },
+                              "opacity": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "x": {
+                                "description": "Horizontal offset, in em.",
+                                "type": "number"
+                              },
+                              "y": {
+                                "description": "Vertical offset, in em.",
+                                "type": "number"
+                              },
+                              "scale": {
+                                "type": "number"
+                              },
+                              "rotate": {
+                                "description": "Degrees.",
+                                "type": "number"
+                              },
+                              "skew": {
+                                "description": "Horizontal skew, in degrees.",
+                                "type": "number"
+                              },
+                              "blur": {
+                                "description": "Blur radius, in em.",
+                                "type": "number",
+                                "minimum": 0
+                              }
+                            },
+                            "required": [
+                              "at"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "duration",
+                        "keyframes"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "copy",
+                    "y"
+                  ],
+                  "additionalProperties": false
+                },
+                "zoom": {
+                  "description": "A zoom, or zooms in turn, each from where the one before left the frame.",
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "to": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "Scale once the zoom completes; 1 is the full frame."
+                        },
+                        "x": {
+                          "default": 0.5,
+                          "description": "Horizontal position of the zoom’s point, from the left.",
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "y": {
+                          "default": 0.5,
+                          "description": "Vertical position of the zoom’s point, from the top.",
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "aim": {
+                          "default": "fixed",
+                          "description": "Whether the point stays where it is, or moves as near the centre as the frame allows.",
+                          "type": "string",
+                          "enum": [
+                            "fixed",
+                            "center"
+                          ]
+                        },
+                        "at": {
+                          "default": 0,
+                          "description": "Seconds after the scene has arrived, its transition done, when the zoom starts.",
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "duration": {
+                          "type": "number",
+                          "minimum": 0,
+                          "description": "Seconds the zoom takes."
+                        },
+                        "easing": {
+                          "default": "linear",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "linear"
+                            },
+                            {
+                              "type": "array",
+                              "prefixItems": [
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ],
+                              "items": false,
+                              "minItems": 4,
+                              "maxItems": 4
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "to",
+                        "duration"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "to": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "description": "Scale once the zoom completes; 1 is the full frame."
+                          },
+                          "x": {
+                            "default": 0.5,
+                            "description": "Horizontal position of the zoom’s point, from the left.",
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "default": 0.5,
+                            "description": "Vertical position of the zoom’s point, from the top.",
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "aim": {
+                            "default": "fixed",
+                            "description": "Whether the point stays where it is, or moves as near the centre as the frame allows.",
+                            "type": "string",
+                            "enum": [
+                              "fixed",
+                              "center"
+                            ]
+                          },
+                          "at": {
+                            "default": 0,
+                            "description": "Seconds after the scene has arrived, its transition done, when the zoom starts.",
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "duration": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "Seconds the zoom takes."
+                          },
+                          "easing": {
+                            "default": "linear",
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "const": "linear"
+                              },
+                              {
+                                "type": "array",
+                                "prefixItems": [
+                                  {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  {
+                                    "type": "number"
+                                  }
+                                ],
+                                "items": false,
+                                "minItems": 4,
+                                "maxItems": 4
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "to",
+                          "duration"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  ]
+                },
+                "taps": {
+                  "default": true,
+                  "description": "Whether to mark taps, when the preview marks them.",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "scene"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "take",
+          "device",
+          "scenes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "screenshots": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "still": {
+            "description": "A still the test captures with PromoStill.capture.",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "file": {
+            "description": "An image to use in place of a captured still, relative to promokit.json, such as a photographed window. Used on every device.",
+            "type": "string",
+            "minLength": 1
+          },
+          "caption": {
+            "description": "A key in copy.<locale>.json.",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "theme": {
+            "description": "Set as data-theme, for brand.css to style.",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "highlights": {
+            "default": true,
+            "description": "Whether to draw the regions the test highlighted when it captured the still.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "creatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "slot": {
+            "type": "string",
+            "enum": [
+              "header",
+              "search",
+              "universal"
+            ],
+            "description": "The product page header, the search-result asset, or the 16:9 universal image that serves both."
+          },
+          "size": {
+            "description": "header: 3840x1646 or 5244x2950; search: 3:2 from 1920x1280 to 3840x2560, or 5244x2950; universal: 5244x2950.",
+            "type": "string",
+            "pattern": "^[1-9]\\d*x[1-9]\\d*$"
+          },
+          "format": {
+            "default": "png",
+            "description": "JPG only for a 3840x1646 header.",
+            "type": "string",
+            "enum": [
+              "png",
+              "jpg"
+            ]
+          },
+          "template": {
+            "type": "string",
+            "minLength": 1,
+            "description": "An HTML fragment, relative to promokit.json, whose data-copy and data-still elements the kit fills."
+          },
+          "css": {
+            "default": [],
+            "description": "Stylesheets, relative to promokit.json, loaded after brand.css.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "device": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One of the stills devices in promokit.json."
+          },
+          "appearance": {
+            "default": "light",
+            "description": "Which appearance’s stills data-still uses.",
+            "type": "string",
+            "enum": [
+              "light",
+              "dark"
+            ]
+          },
+          "theme": {
+            "description": "Set as data-theme on the canvas.",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "search": {
+            "default": true,
+            "description": "For a universal asset, whether it also fills the search-result placement.",
+            "type": "boolean"
+          },
+          "footage": {
+            "description": "Makes the creative a video: the take and scenes its data-footage box plays.",
+            "type": "object",
+            "properties": {
+              "take": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+                "description": "A take named in promokit.json."
+              },
+              "captionEntrance": {
+                "description": "How captions arrive, unless a scene says.",
+                "type": "object",
+                "properties": {
+                  "unit": {
+                    "default": "caption",
+                    "type": "string",
+                    "enum": [
+                      "caption",
+                      "word",
+                      "character"
+                    ]
+                  },
+                  "delay": {
+                    "default": 0,
+                    "description": "Seconds after the scene has arrived, its transition done, before the first unit moves.",
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "duration": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Seconds each unit takes."
+                  },
+                  "stagger": {
+                    "default": 0,
+                    "description": "Seconds between one unit and the next.",
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "easing": {
+                    "default": "linear",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "linear"
+                      },
+                      {
+                        "type": "array",
+                        "prefixItems": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          {
+                            "type": "number"
+                          }
+                        ],
+                        "items": false,
+                        "minItems": 4,
+                        "maxItems": 4
+                      }
+                    ]
+                  },
+                  "keyframes": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "description": "How far through the entrance."
+                        },
+                        "opacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "x": {
+                          "description": "Horizontal offset, in em.",
+                          "type": "number"
+                        },
+                        "y": {
+                          "description": "Vertical offset, in em.",
+                          "type": "number"
+                        },
+                        "scale": {
+                          "type": "number"
+                        },
+                        "rotate": {
+                          "description": "Degrees.",
+                          "type": "number"
+                        },
+                        "skew": {
+                          "description": "Horizontal skew, in degrees.",
+                          "type": "number"
+                        },
+                        "blur": {
+                          "description": "Blur radius, in em.",
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "at"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "duration",
+                  "keyframes"
+                ],
+                "additionalProperties": false
+              },
+              "taps": {
+                "description": "Marks each tap; left out, taps are not marked.",
+                "type": "object",
+                "properties": {
+                  "before": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "after": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "before",
+                  "after"
+                ],
+                "additionalProperties": false
+              },
+              "poster": {
+                "description": "The frame App Store Connect shows before the preview plays.",
+                "type": "object",
+                "properties": {
+                  "scene": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One of the preview’s scenes."
+                  },
+                  "at": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Seconds after the scene has arrived, its transition done."
+                  }
+                },
+                "required": [
+                  "scene",
+                  "at"
+                ],
+                "additionalProperties": false
+              },
+              "scenes": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "scene": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "A scene recorded in the take."
+                    },
+                    "stretches": {
+                      "description": "Which stretches to use, in order, each optionally trimmed; all of them if left out.",
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "index": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "trim": {
+                                "type": "object",
+                                "properties": {
+                                  "start": {
+                                    "default": 0,
+                                    "description": "Seconds to leave out from the start.",
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  "end": {
+                                    "default": 0,
+                                    "description": "Seconds to leave out from the end.",
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "speed": {
+                                "description": "How fast the stretch plays; real time if left out.",
+                                "type": "object",
+                                "properties": {
+                                  "rate": {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "description": "Times real time."
+                                  },
+                                  "ramp": {
+                                    "default": 0,
+                                    "description": "Seconds to reach the rate from real time at the start, and to return at the end.",
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "rate"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "index"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "trim": {
+                      "description": "Footage to leave out of either end of the scene as edited.",
+                      "type": "object",
+                      "properties": {
+                        "start": {
+                          "default": 0,
+                          "description": "Seconds to leave out from the start.",
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "end": {
+                          "default": 0,
+                          "description": "Seconds to leave out from the end.",
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "transition": {
+                      "default": {
+                        "type": "cut"
+                      },
+                      "description": "How this scene arrives.",
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "cut"
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "dissolve"
+                            },
+                            "duration": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "easing": {
+                              "default": "linear",
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "const": "linear"
+                                },
+                                {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ],
+                                  "items": false,
+                                  "minItems": 4,
+                                  "maxItems": 4
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "duration"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The next scene fades in over this one."
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "fade"
+                            },
+                            "duration": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "easing": {
+                              "default": "linear",
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "const": "linear"
+                                },
+                                {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ],
+                                  "items": false,
+                                  "minItems": 4,
+                                  "maxItems": 4
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "duration"
+                          ],
+                          "additionalProperties": false,
+                          "description": "This scene fades out to the background, then the next fades in."
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "slide"
+                            },
+                            "duration": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "direction": {
+                              "type": "string",
+                              "enum": [
+                                "left",
+                                "right",
+                                "up",
+                                "down"
+                              ],
+                              "description": "Which way the content moves."
+                            },
+                            "easing": {
+                              "default": "linear",
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "const": "linear"
+                                },
+                                {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ],
+                                  "items": false,
+                                  "minItems": 4,
+                                  "maxItems": 4
+                                }
+                              ]
+                            },
+                            "motionBlur": {
+                              "default": 0,
+                              "description": "Peak blur along the motion, as a fraction of the frame along it.",
+                              "type": "number",
+                              "minimum": 0
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "duration",
+                            "direction"
+                          ],
+                          "additionalProperties": false,
+                          "description": "The next scene pushes this one out."
+                        }
+                      ]
+                    },
+                    "caption": {
+                      "type": "object",
+                      "properties": {
+                        "copy": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+                          "description": "A key in copy.<locale>.json."
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "description": "Where the caption's centre sits, from the top."
+                        },
+                        "entrance": {
+                          "description": "Overrides the preview's caption entrance.",
+                          "type": "object",
+                          "properties": {
+                            "unit": {
+                              "default": "caption",
+                              "type": "string",
+                              "enum": [
+                                "caption",
+                                "word",
+                                "character"
+                              ]
+                            },
+                            "delay": {
+                              "default": 0,
+                              "description": "Seconds after the scene has arrived, its transition done, before the first unit moves.",
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "duration": {
+                              "type": "number",
+                              "minimum": 0,
+                              "description": "Seconds each unit takes."
+                            },
+                            "stagger": {
+                              "default": 0,
+                              "description": "Seconds between one unit and the next.",
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "easing": {
+                              "default": "linear",
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "const": "linear"
+                                },
+                                {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ],
+                                  "items": false,
+                                  "minItems": 4,
+                                  "maxItems": 4
+                                }
+                              ]
+                            },
+                            "keyframes": {
+                              "minItems": 1,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "at": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1,
+                                    "description": "How far through the entrance."
+                                  },
+                                  "opacity": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "x": {
+                                    "description": "Horizontal offset, in em.",
+                                    "type": "number"
+                                  },
+                                  "y": {
+                                    "description": "Vertical offset, in em.",
+                                    "type": "number"
+                                  },
+                                  "scale": {
+                                    "type": "number"
+                                  },
+                                  "rotate": {
+                                    "description": "Degrees.",
+                                    "type": "number"
+                                  },
+                                  "skew": {
+                                    "description": "Horizontal skew, in degrees.",
+                                    "type": "number"
+                                  },
+                                  "blur": {
+                                    "description": "Blur radius, in em.",
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                "required": [
+                                  "at"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "duration",
+                            "keyframes"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "copy",
+                        "y"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "zoom": {
+                      "description": "A zoom, or zooms in turn, each from where the one before left the frame.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "to": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "description": "Scale once the zoom completes; 1 is the full frame."
+                            },
+                            "x": {
+                              "default": 0.5,
+                              "description": "Horizontal position of the zoom’s point, from the left.",
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "default": 0.5,
+                              "description": "Vertical position of the zoom’s point, from the top.",
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "aim": {
+                              "default": "fixed",
+                              "description": "Whether the point stays where it is, or moves as near the centre as the frame allows.",
+                              "type": "string",
+                              "enum": [
+                                "fixed",
+                                "center"
+                              ]
+                            },
+                            "at": {
+                              "default": 0,
+                              "description": "Seconds after the scene has arrived, its transition done, when the zoom starts.",
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "duration": {
+                              "type": "number",
+                              "minimum": 0,
+                              "description": "Seconds the zoom takes."
+                            },
+                            "easing": {
+                              "default": "linear",
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "const": "linear"
+                                },
+                                {
+                                  "type": "array",
+                                  "prefixItems": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ],
+                                  "items": false,
+                                  "minItems": 4,
+                                  "maxItems": 4
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "to",
+                            "duration"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "minItems": 1,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "to": {
+                                "type": "number",
+                                "exclusiveMinimum": 0,
+                                "description": "Scale once the zoom completes; 1 is the full frame."
+                              },
+                              "x": {
+                                "default": 0.5,
+                                "description": "Horizontal position of the zoom’s point, from the left.",
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "y": {
+                                "default": 0.5,
+                                "description": "Vertical position of the zoom’s point, from the top.",
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "aim": {
+                                "default": "fixed",
+                                "description": "Whether the point stays where it is, or moves as near the centre as the frame allows.",
+                                "type": "string",
+                                "enum": [
+                                  "fixed",
+                                  "center"
+                                ]
+                              },
+                              "at": {
+                                "default": 0,
+                                "description": "Seconds after the scene has arrived, its transition done, when the zoom starts.",
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "duration": {
+                                "type": "number",
+                                "minimum": 0,
+                                "description": "Seconds the zoom takes."
+                              },
+                              "easing": {
+                                "default": "linear",
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "const": "linear"
+                                  },
+                                  {
+                                    "type": "array",
+                                    "prefixItems": [
+                                      {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 1
+                                      },
+                                      {
+                                        "type": "number"
+                                      },
+                                      {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 1
+                                      },
+                                      {
+                                        "type": "number"
+                                      }
+                                    ],
+                                    "items": false,
+                                    "minItems": 4,
+                                    "maxItems": 4
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "to",
+                              "duration"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      ]
+                    },
+                    "taps": {
+                      "default": true,
+                      "description": "Whether to mark taps, when the preview marks them.",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "scene"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "take",
+              "scenes"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "slot",
+          "size",
+          "template",
+          "device"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
