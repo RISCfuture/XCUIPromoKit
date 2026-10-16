@@ -157,6 +157,15 @@
             "1440x900",
             "1280x800"
           ]
+        },
+        "capture": {
+          "default": "screen",
+          "description": "How PromoStill.capture(_:of:ownedBy:) captures a window: \"screen\" grabs its rectangle of screen, and render rounds and shadows it; \"window\" captures it on its own, with its transparency and real corners and shadow, and needs Screen Recording permission for the test runner.",
+          "type": "string",
+          "enum": [
+            "screen",
+            "window"
+          ]
         }
       },
       "required": [

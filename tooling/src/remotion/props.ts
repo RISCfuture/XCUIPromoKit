@@ -1,4 +1,6 @@
+import type { MacCapture } from '../config.ts';
 import type { CreativeSlot, Rectangle } from '../devices.ts';
+import type { WindowSize } from '../render/window.ts';
 import type { Entrance, TapMarks as TapTiming, Transition, Zoom } from '../storyboard/schema.ts';
 
 /** Everything a composition draws in the app's brand gets the brand's stylesheet. */
@@ -84,6 +86,10 @@ export type ScreenshotProps = Branded & {
   still: string;
   highlights?: Highlight[];
   layout: ScreenshotLayout;
+  /** How a Mac still was captured: a window's rectangle of screen, or the window on its own. */
+  capture?: MacCapture;
+  /** The window a `screen` still grabbed, in points, which its corners and shadow scale by. */
+  window?: WindowSize;
   caption?: { id: string; text: string };
   theme?: string;
 };

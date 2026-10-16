@@ -7,6 +7,7 @@ import { probe } from '../probe.ts';
 import { creativeFileName } from '../render/placements.ts';
 import { highlightsSuffix, readHighlights } from '../render/highlights.ts';
 import { outputDirectory } from '../render/render.ts';
+import { readWindow, windowSuffix } from '../render/window.ts';
 import type { Copy, Storyboard } from '../storyboard/schema.ts';
 import { plainText } from '../storyboard/markup.ts';
 import { lintCopy } from './copy.ts';
@@ -92,21 +93,29 @@ async function screenshotFiles(project: Project, storyboard: Storyboard) {
   return new Set(named.filter((_, index) => exists[index]));
 }
 
-/** Flags files among the stills that render can't use, and highlights it can't read. */
+/** Flags files among the stills that render can't use, and highlights or window sizes it can't read. */
 async function checkStillFiles(project: Project): Promise<Finding[]> {
   const root = path.join(project.workDirectory, 'stills');
   const findings: Finding[] = [];
   for (const file of await files(root, /./, true)) {
     const subject = path.relative(root, file);
     if (file.endsWith(highlightsSuffix)) {
-      await readHighlights(file.slice(0, -highlightsSuffix.length) + '.png').catch(() =>
+      await readHighlights(stillBeside(file, highlightsSuffix)).catch(() =>
         findings.push(error(subject, 'highlights', "isn't a list of regions promokit can read"))
       );
+    } else if (file.endsWith(windowSuffix)) {
+      await readWindow(stillBeside(file, windowSuffix)).catch(() =>
+        findings.push(error(subject, 'window', "isn't a window size promokit can read"))
+      );
     } else if (!file.endsWith('.png')) {
-      findings.push(warning(subject, 'still', 'is neither a still nor its highlights'));
+      findings.push(warning(subject, 'still', 'is neither a still nor a file beside one'));
     }
   }
   return findings;
+}
+
+function stillBeside(file: string, suffix: string) {
+  return file.slice(0, -suffix.length) + '.png';
 }
 
 /** Each creative's template, by creative id; undefined where it can't be read. */

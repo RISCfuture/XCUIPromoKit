@@ -14,7 +14,8 @@ three parts:
 - **Check.** `promokit check` tests the copy, the storyboard and the rendered
   media against Apple's requirements before anything is uploaded.
 
-The kit has no look of its own. Every transition, caption entrance, zoom, tap
+The kit has no look of its own, beyond the corners and shadow it gives a Mac
+window grabbed from the screen. Every transition, caption entrance, zoom, tap
 mark and layout is a parameter in the storyboard or a rule in the app's
 `brand.css`. Anything left unspecified falls back to the plainest choice: a cut,
 a linear pace, a caption that is simply there. Uploading stays with fastlane's
@@ -32,7 +33,7 @@ a linear pace, a caption that is simply there. Uploading stays with fastlane's
 Link `XCUIPromoKit` from the UI-test target that plays the promo scripts:
 
 ```swift
-.package(url: "https://github.com/RISCfuture/XCUIPromoKit", from: "1.0.0")
+.package(url: "https://github.com/RISCfuture/XCUIPromoKit", from: "1.1.0")
 ```
 
 Then add a `promo/` folder to the app with a `package.json` that depends on the
@@ -42,7 +43,7 @@ tooling at the same tag:
 {
   "private": true,
   "dependencies": {
-    "xcuipromokit": "github:RISCfuture/XCUIPromoKit#1.0.0&path:/tooling"
+    "xcuipromokit": "github:RISCfuture/XCUIPromoKit#1.1.0&path:/tooling"
   }
 }
 ```
@@ -97,7 +98,7 @@ Outside `promokit record`, `PromoTake` skips the test.
 | `PromoTake` | Runs the handshake with the host. `scene(_:_:)` names a scene, which the host films on its own: from when it begins until its steps finish, so nothing between scenes is filmed; `keep(_:)` keeps everything an action does; `keepTail(settle:_:)` keeps only what an action changes on screen, from `tapLanding` seconds before its first change to `settle` after its last, which `promokit prepare` finds in the footage. `hold(_:)` keeps a held shot, and `holdOnScreenshot(_:)` holds on a screenshot instead of the footage, for a static screen the recorder misses. `finish()` writes `take.json`. |
 | `PromoTake` interactions | `tap(_:settle:)`, `setSwitch(_:to:settle:)` (through XCUITestKit), `type(_:into:cadence:settle:)` (one character at a time, at a `TypingCadence`), `openAndHold(_:revealing:for:)` (menus, pickers and dropdowns) and, on iOS, `scroll(_:by:speed:rest:)` and `drag(from:to:press:duration:hold:settle:)` (an evenly paced drag between coordinates, or across an element by normalized offsets) and `trace(through:press:duration:hold:settle:)` (one continuous touch through any number of points at an even speed, for strokes that curve or turn; it drives XCTest's own event synthesis, which has no public API). Each logs its touches' positions and times, for touch marks. `noteTap(at:)`, `noteDrag(from:to:press:duration:hold:)` and `noteDrag(along:press:duration:hold:)` log any other gesture. |
 | `TypingCadence` | The interval between keystrokes, its jitter, an extra pause after a word, and a seed so every take types identically. |
-| `PromoStill` | `capture(_:of:highlighting:settlingWithin:in:)` writes a still to the directory `promokit stills` hands over, never to fastlane's shared cache. Without one, as on the Mac, it attaches the still to the test. Given a time to settle, it captures until two captures in a row match, so scrollbars and animations have come to rest. `highlighting` takes regions to highlight, each the union of some elements' frames, even outside the captured element, and saves them beside the still. On macOS 26 and later, `captureWindow(_:of:ownedBy:in:)` captures one window with its transparency and real shadow (though a window drawn in a material, such as a menu, comes out flat grey, so capture that one over a staged backdrop), and `captureWindow(_:in:where:)` picks any on-screen window, such as a menu bar extra's panel; the test runner needs Screen Recording permission, which macOS doesn't prompt for during a test: add the runner app under System Settings › Privacy & Security › Screen & System Audio Recording. |
+| `PromoStill` | `capture(_:of:highlighting:settlingWithin:in:)` writes a still to the directory `promokit stills` hands over, never to fastlane's shared cache. Without one, as on the Mac, it attaches the still to the test. Given a time to settle, it captures until two captures in a row match, so scrollbars and animations have come to rest. `highlighting` takes regions to highlight, each the union of some elements' frames, even outside the captured element, and saves them beside the still. On macOS 26 and later, `capture(_:of:ownedBy:highlighting:settlingWithin:in:)` captures a Mac window the way `mac.capture` in `promokit.json` asks (see [Mac stills](#mac-stills)). `captureWindow(_:of:ownedBy:highlighting:settlingWithin:in:)` captures one window with its transparency and real shadow (though a window drawn in a material, such as a menu, comes out flat grey, so capture that one over a staged backdrop), and `captureWindow(_:in:where:)` picks any on-screen window, such as a menu bar extra's panel; the test runner needs Screen Recording permission, which macOS doesn't prompt for during a test: add the runner app under System Settings › Privacy & Security › Screen & System Audio Recording. |
 | `PromoLaunch` | Launch arguments: bare flags, argument-domain defaults, and the locale `promokit` asks for. |
 
 ### The promo folder
@@ -130,6 +131,43 @@ Takes, stills and renders live in the repository's `.build/promo`. Every build
 and test run uses the scheme's `testPlan` and the `buildSettings` overrides from
 `promokit.json`, when it names them. A take or the stills can name a simulator
 `runtime`, such as `"iOS 27.0"`; otherwise simulators get the newest installed.
+
+### Mac stills
+
+The Mac test captures each window with one call, and `promokit.json` chooses
+how:
+
+```swift
+try await PromoStill.capture(
+  "settings", of: app.windows["Settings"], ownedBy: "com.example.app", in: self)
+```
+
+```json
+{
+  "mac": {
+    "test": "AppUITests/MacStoreScreenshots/testCaptureStills",
+    "capture": "screen"
+  }
+}
+```
+
+- `"screen"`, the default, grabs the window's rectangle of screen through
+  XCTest. It needs no permission, and suits an ordinary opaque titled window.
+  The grab is opaque, with the screen behind its corners, so the render clips
+  it to the window's rounded corners and draws a shadow like the system's under
+  it, both scaled to the window as laid out. The test saves the window's size
+  in points beside the still, as `<name>.window.json`, to scale them by.
+- `"window"` captures the window on its own through ScreenCaptureKit, with its
+  transparency, its real corners and the system shadow, and the render adds
+  nothing. Use it for a window that is partly transparent or drawn in glass,
+  which a screen grab turns opaque. The test runner needs Screen Recording
+  permission, which macOS doesn't prompt for during a test: add the runner app,
+  from DerivedData's `Build/Products` folder, under System Settings › Privacy &
+  Security › Screen & System Audio Recording.
+
+`promokit mac-stills` passes the mode to the test as `PROMO_MAC_CAPTURE`. The
+still includes the shadow in `"window"` mode and not in `"screen"` mode, so
+size it in `brand.css` for the mode you choose.
 
 ## The storyboard
 
@@ -278,6 +316,16 @@ overrides it. The hooks are:
   phone or tablet screenshot is the size of its still. A Mac still is a window,
   laid out at its own pixel size on the canvas `mac.size` in `promokit.json`
   names: `2880x1800` unless it's `2560x1600`, `1440x900` or `1280x800`.
+- `data-capture` on a Mac still's `.promo-screenshot`: `screen` or `window`, as
+  `mac.capture` says. A `screen` still is clipped to its window's corners, and
+  `.promo-window-shadow`, laid exactly under `.promo-screen`, draws its shadow.
+  Both scale with the window: `--promo-window-width` and
+  `--promo-window-height` are its size in points, and `--promo-window-pt` is one
+  of its points as rendered. Restyle them with `--promo-window-radius` (15.5
+  points), `--promo-window-inset` (0.5 points shaved off every edge, where the
+  grab's antialiasing holds the screen behind it) and `--promo-window-shadow` (a
+  `box-shadow`, in multiples of `--promo-window-pt`). A `window` still brings
+  its own corners and shadow, so leave it unclipped and unshadowed.
 - `.promo-highlights`: laid exactly over `.promo-screen` when the test
   highlighted regions. It holds `.promo-dim`, an SVG whose `fill` dims the
   still outside every region, and a `.promo-highlight` box per region, with
@@ -307,8 +355,8 @@ It checks:
   copy its template names. A video's template needs exactly one
   `data-footage`, an image's none. Creatives that fill the same placement get a
   warning, since each needs its own placement group.
-- **Stills:** a highlights file render can't read is an error, and any other
-  file that's neither a still nor its highlights is a warning.
+- **Stills:** a highlights or window-size file render can't read is an error,
+  and any other file that's neither a still nor a file beside one is a warning.
 
 Creative choices are never checked. [docs/DESIGN.md](docs/DESIGN.md) records
 Apple's rules and the capture pitfalls the tooling handles.

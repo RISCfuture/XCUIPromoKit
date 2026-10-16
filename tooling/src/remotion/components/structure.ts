@@ -16,6 +16,14 @@
  * - `.promo-screenshot` with `data-layout` (`phone`, `tablet` or `mac`), `.promo-headline`,
  *   `.promo-screen` (the still) and, on the Mac, `.promo-window` around it. A Mac screenshot's
  *   canvas is promokit.json's `mac.size`; any other is its still's size.
+ * - `data-capture` on a Mac still's `.promo-screenshot`: `screen` or `window`, as promokit.json's
+ *   `mac.capture` says. A `screen` still is a window's rectangle of screen, which the kit clips to
+ *   the window's corners and shadows with `.promo-window-shadow`, laid exactly under
+ *   `.promo-screen`. Both scale with the window, by `--promo-window-width` and
+ *   `--promo-window-height`, its size in points; `--promo-window-pt` is one of its points as
+ *   rendered. `--promo-window-radius` and `--promo-window-inset` (in points; the inset shaves the
+ *   window's edge, where its antialiasing holds the screen behind it) and `--promo-window-shadow`
+ *   (a `box-shadow`) restyle them. A `window` still comes with its own corners and shadow.
  * - `.promo-highlights`, laid exactly over `.promo-screen` when the test highlighted regions:
  *   `.promo-dim`, an SVG whose `fill` dims the still outside every region, and a `.promo-highlight`
  *   box per region, with `data-index`. `--promo-highlight-pad` grows each region and
@@ -63,6 +71,39 @@ export const structure = `
   width: anchor-size(width);
   height: anchor-size(height);
   pointer-events: none;
+}
+:where([data-capture='screen']) {
+  --promo-window-radius: 15.5;
+  --promo-window-inset: 0.5;
+  --promo-window-pt: calc(100cqw / var(--promo-window-width));
+  --promo-window-shadow: 0 calc(20 * var(--promo-window-pt)) calc(42 * var(--promo-window-pt))
+    rgb(0 0 0 / 38%);
+}
+:where([data-capture='screen'] .promo-screen) {
+  position: relative;
+  clip-path: inset(
+    calc(var(--promo-window-inset) / var(--promo-window-height) * 100%)
+      calc(var(--promo-window-inset) / var(--promo-window-width) * 100%) round
+      calc(var(--promo-window-radius) / var(--promo-window-width) * 100%) /
+      calc(var(--promo-window-radius) / var(--promo-window-height) * 100%)
+  );
+}
+:where(.promo-window-shadow) {
+  position: absolute;
+  position-anchor: --promo-still;
+  top: anchor(top);
+  left: anchor(left);
+  width: anchor-size(width);
+  height: anchor-size(height);
+  container-type: size;
+  pointer-events: none;
+}
+:where(.promo-window-shadow)::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--promo-window-inset) * var(--promo-window-pt));
+  border-radius: calc(var(--promo-window-radius) * var(--promo-window-pt));
+  box-shadow: var(--promo-window-shadow);
 }
 :where(.promo-dim) { position: absolute; inset: 0; overflow: visible; fill: transparent; }
 :where(.promo-highlight) { position: absolute; border-radius: var(--promo-highlight-radius, 0px); }

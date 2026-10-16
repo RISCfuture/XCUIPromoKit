@@ -1,6 +1,6 @@
 {
   "name": "xcuipromokit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Records App Store promo footage and stills from UI tests, renders them with Remotion, and checks them against Apple's rules.",
   "license": "MIT",
   "author": "Tim Morgan",

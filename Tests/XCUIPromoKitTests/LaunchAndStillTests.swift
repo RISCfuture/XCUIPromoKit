@@ -83,3 +83,43 @@ struct `Highlighted regions` {
     }
   }
 }
+
+@Suite
+struct `Window in its shadow` {
+  private static let shadow: [UInt8] = [0, 0, 0, 90]
+  private static let clear: [UInt8] = [0, 0, 0, 0]
+
+  /// A 3×2 window: opaque but for a clear corner, as a rounded window's is.
+  private static let window = [
+    [clear, [200, 10, 10, 255], [10, 200, 10, 255]],
+    [[10, 10, 200, 255], [250, 250, 250, 255], [40, 40, 40, 255]]
+  ]
+
+  private static func bitmap(_ rows: [[[UInt8]]]) -> Bitmap {
+    Bitmap(width: rows[0].count, height: rows.count, bytes: rows.flatMap { $0.flatMap(\.self) })
+  }
+
+  /// `window` laid over shadow `left` pixels in and `top` pixels down a `width`×`height` capture.
+  private static func shadowed(width: Int, height: Int, left: Int, top: Int) -> Bitmap {
+    bitmap(
+      (0..<height).map { y in
+        (0..<width).map { x in
+          let inWindow = (left..<left + 3).contains(x) && (top..<top + 2).contains(y)
+          guard inWindow else { return shadow }
+          let pixel = window[y - top][x - left]
+          return pixel == clear ? shadow : pixel
+        }
+      }
+    )
+  }
+
+  @Test
+  func `finds the window centred across, at the height its opaque pixels match`() {
+    let capture = Self.shadowed(width: 7, height: 6, left: 2, top: 1)
+
+    let offset = capture.offset(of: Self.bitmap(Self.window), sampling: 1)
+
+    #expect(offset.x == 2)
+    #expect(offset.y == 1)
+  }
+}

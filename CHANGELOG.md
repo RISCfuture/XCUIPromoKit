@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-15
+
+### Added
+
+- `mac.capture` in `promokit.json` chooses how the Mac test captures windows:
+  `"screen"` (the default) grabs the window's rectangle of screen through
+  XCTest, and `"window"` captures it on its own through ScreenCaptureKit, with
+  its transparency and system shadow, which needs Screen Recording permission.
+  `promokit mac-stills` passes the mode to the test as `PROMO_MAC_CAPTURE`.
+- `PromoStill.capture(_:of:ownedBy:highlighting:settlingWithin:in:)`, one call
+  for a Mac window in either mode. In `"screen"` mode it saves the window's
+  size in points beside the still.
+- `PromoStill.captureWindow(_:of:ownedBy:)` can highlight regions and wait for
+  the window to settle.
+- The render clips a `"screen"` still to the window's rounded corners and
+  shadows it like the system does, scaled to the window as laid out, marking
+  its `.promo-screenshot` with `data-capture`. `--promo-window-radius`,
+  `--promo-window-inset` and `--promo-window-shadow` restyle them.
+
 ## [1.0.0] - 2026-10-15
 
 ### Added

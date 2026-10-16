@@ -61,16 +61,21 @@ public enum PromoStill {
       regions.isEmpty
       ? nil : try Highlights(named: name, regions: regions, in: screenshot, of: element)
 
-    if let directory = environment[directoryVariable] {
-      try write(screenshot.pngRepresentation, to: "\(name).png", for: name, in: directory)
-      if let highlights {
-        try write(highlights.json(), to: "\(name).\(Highlights.suffix)", for: name, in: directory)
-      }
-    } else {
-      attach(screenshot.pngRepresentation, named: name, type: .png, to: testCase)
-      if let highlights {
-        attach(try highlights.json(), named: "\(name).highlights", type: .json, to: testCase)
-      }
+    try save(
+      screenshot.pngRepresentation,
+      as: "png",
+      for: name,
+      in: testCase,
+      environment: environment
+    )
+    if let highlights {
+      try save(
+        highlights.json(),
+        as: Highlights.suffix,
+        for: name,
+        in: testCase,
+        environment: environment
+      )
     }
   }
 
@@ -99,7 +104,33 @@ public enum PromoStill {
     throw StillError.didNotSettle(name, timeout)
   }
 
-  static func write(_ data: Data, to file: String, for name: String, in directory: String) throws {
+  /**
+   Writes `data` to `<name>.<suffix>` in the still directory or, without one, attaches it to the test
+   under that name less its extension, so `promokit` exports it under the same file name.
+   */
+  static func save(
+    _ data: Data,
+    as suffix: String,
+    for name: String,
+    in testCase: XCTestCase,
+    environment: [String: String]
+  ) throws {
+    let file = URL(filePath: "\(name).\(suffix)")
+    if let directory = environment[directoryVariable] {
+      try write(data, to: file.lastPathComponent, for: name, in: directory)
+    } else {
+      attach(
+        data,
+        named: file.deletingPathExtension().lastPathComponent,
+        type: UTType(filenameExtension: file.pathExtension) ?? .data,
+        to: testCase
+      )
+    }
+  }
+
+  private static func write(_ data: Data, to file: String, for name: String, in directory: String)
+    throws
+  {
     do {
       try data.write(
         to: URL(filePath: directory, directoryHint: .isDirectory).appending(path: file),
@@ -110,7 +141,12 @@ public enum PromoStill {
     }
   }
 
-  static func attach(_ data: Data, named name: String, type: UTType, to testCase: XCTestCase) {
+  private static func attach(
+    _ data: Data,
+    named name: String,
+    type: UTType,
+    to testCase: XCTestCase
+  ) {
     let attachment = XCTAttachment(data: data, uniformTypeIdentifier: type.identifier)
     attachment.name = name
     attachment.lifetime = .keepAlways

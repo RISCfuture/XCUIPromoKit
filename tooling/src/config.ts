@@ -15,6 +15,10 @@ const runtime = z
     'The simulator runtime to film on, by name or identifier, such as "iOS 27.0"; the newest if left out.'
   );
 
+/** How the Mac test captures a window: its rectangle of screen, or the window on its own. */
+export const MacCapture = z.enum(['screen', 'window']);
+export type MacCapture = z.infer<typeof MacCapture>;
+
 export const Take = z
   .object({
     test: z.string().describe('The -only-testing identifier of the test that plays the take.'),
@@ -66,6 +70,9 @@ export const Config = z
           .default('2880x1800')
           .transform((size) => PixelSize.parse(size))
           .describe('The Mac screenshot canvas, which brand.css lays the window still out in.'),
+        capture: MacCapture.default('screen').describe(
+          'How PromoStill.capture(_:of:ownedBy:) captures a window: "screen" grabs its rectangle of screen, and render rounds and shadows it; "window" captures it on its own, with its transparency and real corners and shadow, and needs Screen Recording permission for the test runner.'
+        ),
       })
       .strict()
       .optional(),

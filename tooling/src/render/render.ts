@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { bundle } from '@remotion/bundler';
 import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
 import type { VideoConfig } from 'remotion';
-import type { Project } from '../config.ts';
+import type { MacCapture, Project } from '../config.ts';
 import { previewFormats, type Size } from '../devices.ts';
 import { say } from '../process.ts';
 import { probe, videoStream } from '../probe.ts';
@@ -19,6 +19,7 @@ import type {
   Storyboard,
 } from '../storyboard/schema.ts';
 import { readHighlights } from './highlights.ts';
+import { readWindow } from './window.ts';
 import { encodeCreativeVideo, encodePreview, flattenImage } from './encode.ts';
 import { creativeFiles, creativeProps, renderCreative } from './creative.ts';
 import { clearPlacements, creativeFileName, placements, writePlacements } from './placements.ts';
@@ -258,18 +259,22 @@ async function renderScreenshot(
     .catch(() => undefined);
   if (!stream?.width || !stream.height) return;
   const { width, height, layout } = canvas ?? screenCanvas(stream.width, stream.height);
+  const capture = screenshot.still === undefined ? undefined : canvas?.capture;
 
   const id = screenshot.caption;
   const text = id === undefined ? undefined : copy[id];
   const caption = id !== undefined && text !== undefined ? { id, text } : undefined;
   const highlights =
     screenshot.highlights && screenshot.still !== undefined ? await readHighlights(still.path) : [];
+  const window = capture === 'screen' ? await readWindow(still.path) : undefined;
   const inputProps = {
     brandCSS: session.stage.brandPath(session.project.resolve(session.project.config.brand.css)),
     width,
     height,
     still: still.publicPath,
     layout,
+    ...(capture && { capture }),
+    ...(window && { window }),
     ...(caption && { caption }),
     ...(highlights.length > 0 && { highlights }),
     ...(screenshot.theme !== undefined && { theme: screenshot.theme }),
@@ -308,13 +313,16 @@ function screenshotImage(
   };
 }
 
-type Canvas = Size & { layout: ScreenshotLayout };
+type Canvas = Size & { layout: ScreenshotLayout; capture?: MacCapture };
 
-/** A Mac screenshot lays its window still out on the canvas promokit.json sizes. */
+/**
+ * A Mac screenshot lays its window still out on the canvas promokit.json sizes, and frames it as
+ * the window was captured.
+ */
 function macCanvas(project: Project): Canvas {
   const { mac } = project.config;
   if (!mac) throw new Error('There are Mac stills, but promokit.json has no mac to size them');
-  return { ...mac.size, layout: 'mac' };
+  return { ...mac.size, layout: 'mac', capture: mac.capture };
 }
 
 /** A phone or tablet screenshot is drawn around its whole-screen still, at the still's size. */

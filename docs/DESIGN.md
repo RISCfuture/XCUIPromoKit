@@ -158,8 +158,17 @@ and its templates on 2026-10-15.
   `.build/promo`. This keeps runs for different apps, or by different agents,
   apart.
 - **Mac window captures.**
-  - The capture is the window's bounding rectangle. Mask it to the window's
-    rounded corners and shave its outermost pixel in `brand.css`.
+  - XCTest's capture is the window's bounding rectangle, opaque, with the screen
+    in its corners. It loses the window's transparency: a transparent window
+    becomes an opaque slab, and glass goes flat grey. The render masks it to the
+    window's rounded corners, shaves its outermost half point and shadows it,
+    scaled by the window's size in points, which the test records beside it; a
+    fixed radius in `brand.css` misses the corners once the still is scaled.
+  - ScreenCaptureKit captures the window on its own, with its transparency,
+    corners and system shadow, but the test runner needs Screen Recording
+    permission. The shadow spreads evenly left and right but further down
+    than up, so a region to highlight is placed by matching the window's
+    opaque pixels against a second, shadowless capture.
   - `-NSRequiresAquaSystemAppearance YES` forces light mode.
   - Don't pass `-ApplePersistenceIgnoreState`, or no windows open.
   - Don't capture the print panel: it shows the user's printer name.

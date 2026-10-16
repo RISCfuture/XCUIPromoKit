@@ -10,6 +10,7 @@ import { buildForTesting, testWithoutBuilding } from './xcodebuild.ts';
 
 const stillVariable = 'PROMO_STILL_DIRECTORY';
 const localeVariable = 'PROMO_LOCALE';
+const macCaptureVariable = 'PROMO_MAC_CAPTURE';
 
 /** Where one device's stills for one locale go: `.build/promo/stills/<locale>/<device>`. */
 export function stillsDirectory(project: Project, locale: string, device: string) {
@@ -52,7 +53,10 @@ export async function captureStills(project: Project) {
   }
 }
 
-/** Captures the Mac stills, which the test attaches to its result bundle, in each locale. */
+/**
+ * Captures the Mac stills, which the test attaches to its result bundle, in each locale, telling
+ * the test how promokit.json's `mac.capture` asks it to capture windows.
+ */
 export async function captureMacStills(project: Project) {
   const { mac, locales } = project.config;
   if (!mac) throw new Error('promokit.json has no mac');
@@ -69,7 +73,7 @@ export async function captureMacStills(project: Project) {
     await testWithoutBuilding(project, {
       destination,
       test: mac.test,
-      environment: { [localeVariable]: locale },
+      environment: { [localeVariable]: locale, [macCaptureVariable]: mac.capture },
       extraArguments: [...localeArguments(locale), '-resultBundlePath', bundle],
     });
     const directory = stillsDirectory(project, locale, macDevice);
@@ -102,7 +106,7 @@ const AttachmentManifest = z.array(
 );
 
 /**
- * Exports a result bundle's stills and their highlights, and files each under the name the test
+ * Exports a result bundle's stills and the files beside them, and files each under the name the test
  * gave it. The exporter inserts an index and a UUID, as in `pilot_0_9D3F….png`, before whatever
  * looks like an extension, so `pilot.highlights` becomes `pilot_0_9D3F….highlights`.
  */
