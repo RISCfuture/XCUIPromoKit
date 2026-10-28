@@ -28,32 +28,45 @@ describe('sceneTimeline', () => {
     );
 
     expect(scenes.map(({ name, ranges }) => ({ name, ranges }))).toEqual([
-      { name: 'climb', ranges: [{ start: 2, end: 4.5 }] },
+      {
+        name: 'climb',
+        ranges: [
+          { start: 2, end: 3.5 },
+          { start: 3.5, end: 4.5 },
+        ],
+      },
       { name: 'moderate', ranges: [{ start: 4.5, end: 6 }] },
     ]);
     expect(scenes.map(sceneLength)).toEqual([2.5, 1.5]);
   });
 
-  it('drops a stretch wholly inside one already kept', () => {
+  it('gives each kept action its own stretch, however close together they were filmed', () => {
+    const scenes = sceneTimeline(
+      take([
+        { scene: 'load', start: 1, end: 2 },
+        { scene: 'load', start: 2, end: 3 },
+        { scene: 'load', start: 3.01, end: 4 },
+      ])
+    );
+    expect(scenes[0]?.ranges).toEqual([
+      { start: 1, end: 2 },
+      { start: 2, end: 3 },
+      { start: 3.01, end: 4 },
+    ]);
+  });
+
+  it('keeps a stretch wholly inside one already kept, empty, so the stretches after keep their numbers', () => {
     const scenes = sceneTimeline(
       take([
         { scene: 'opening', start: 0, end: 3 },
         { scene: 'opening', start: 1, end: 2 },
-      ])
-    );
-    expect(scenes[0]?.ranges).toEqual([{ start: 0, end: 3 }]);
-  });
-
-  it('keeps separate stretches apart', () => {
-    const scenes = sceneTimeline(
-      take([
-        { scene: 'climb', start: 2, end: 3 },
-        { scene: 'climb', start: 7, end: 8 },
+        { scene: 'opening', start: 4, end: 5 },
       ])
     );
     expect(scenes[0]?.ranges).toEqual([
-      { start: 2, end: 3 },
-      { start: 7, end: 8 },
+      { start: 0, end: 3 },
+      { start: 3, end: 3 },
+      { start: 4, end: 5 },
     ]);
   });
 

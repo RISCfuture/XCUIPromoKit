@@ -44,14 +44,33 @@ describe('snapScenes', () => {
     expect(snapped[0]?.ranges).toEqual([{ start: 0, end: 1.5 }]);
   });
 
-  it('trims the scene before when the change falls inside it', () => {
+  it('trims the scene before when the change falls inside it, keeping its stretches’ numbers', () => {
     const overlapping: Scene[] = [
-      { name: 'a', ranges: [{ start: 0, end: 4 }], taps: [], drags: [] },
-      { name: 'b', ranges: [{ start: 4, end: 6 }], taps: [{ time: 4.2, x: 0, y: 0 }], drags: [] },
+      {
+        name: 'a',
+        ranges: [
+          { start: 0, end: 3.95 },
+          { start: 3.95, end: 4 },
+        ],
+        taps: [],
+        drags: [],
+      },
+      {
+        name: 'b',
+        ranges: [
+          { start: 4, end: 4 },
+          { start: 4, end: 6 },
+        ],
+        taps: [{ time: 4.2, x: 0, y: 0 }],
+        drags: [],
+      },
     ];
     const snapped = snapScenes(overlapping, [{ time: 3.9, score: 8 }]);
-    expect(snapped[0]?.ranges).toEqual([{ start: 0, end: 3.9 }]);
-    expect(snapped[1]?.ranges[0]?.start).toBe(3.9);
+    expect(snapped[0]?.ranges).toEqual([
+      { start: 0, end: 3.9 },
+      { start: 3.9, end: 3.9 },
+    ]);
+    expect(snapped[1]?.ranges[1]?.start).toBe(3.9);
   });
 
   it('leaves a scene alone when no change is found', () => {

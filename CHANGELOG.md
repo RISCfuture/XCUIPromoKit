@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-10-28
+
+### Changed
+
+- **Breaking:** a scene's stretches are numbered by the test alone: each
+  action the test keeps in the scene (a `keep`, `keepTail`, `hold`,
+  `holdOnScreenshot` or interaction; `type` keeps two, the tap that focuses
+  the field and the typing) is one stretch, numbered from 0 in the order kept.
+  Stretches are no longer joined when the footage puts them within a frame of
+  each other, or dropped when an earlier stretch or the end of their recording
+  covers them, so a storyboard's `stretches` pick the same actions in every
+  recording of the take. Before, two recordings of one take could number a
+  scene's stretches differently, and a storyboard that rendered one failed
+  with “has no stretch” on the next.
+- A stretch an earlier one covers, or one outside its recording, is kept
+  empty. `promokit prepare` lists it as `empty`, and the render leaves it out.
+- The render plays stretches that run on from one another at the same speed as
+  one clip, so a scene that uses all of its stretches looks exactly as it did.
+
+### Migration
+
+- Bump both pins to `2.0.0`: the Swift package and `xcuipromokit` in
+  `promo/package.json`.
+- Run `promokit prepare <take>` on each recorded take. It rebuilds the
+  manifest from `take.json` and the scene recordings already in
+  `.build/promo/takes/<take>`, with no new recording, and lists each scene's
+  stretches by their new numbers.
+- Renumber every `stretches` list that picked a joined stretch. A 1.x stretch
+  that covered several actions is now that many stretches in a row: pick each
+  of them, moving the old `trim.start` to the first and `trim.end` to the last,
+  and giving each the old `speed`, which then still ramps once over the run.
+  Scenes without `stretches`, and lists whose stretches were never joined,
+  need no change.
+- Workarounds that kept actions apart, such as a pause between two kept
+  actions or one `keep` around several, are no longer needed.
+
 ## [1.2.0] - 2026-10-28
 
 ### Added

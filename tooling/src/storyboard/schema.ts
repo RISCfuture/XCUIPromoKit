@@ -147,7 +147,10 @@ export const Speed = z
   .strict();
 export type Speed = z.infer<typeof Speed>;
 
-/** One of the stretches a take kept for a scene, numbered from 0 as `promokit prepare` lists them. */
+/**
+ * One of the stretches a take kept for a scene: one for each action the test kept in the scene,
+ * numbered from 0 in the order it kept them, as `promokit prepare` lists them.
+ */
 export const Stretch = z.union([
   z.number().int().nonnegative(),
   z
@@ -168,7 +171,9 @@ export const PreviewScene = z
       .min(1)
       .optional()
       .describe(
-        'Which stretches to use, in order, each optionally trimmed; all of them if left out.'
+        'Which stretches to use, in order, each optionally trimmed; all of them if left out. ' +
+          'Each action the test kept in the scene is a stretch, numbered from 0 in the order it ' +
+          'kept them.'
       ),
     trim: Trim.optional().describe('Footage to leave out of either end of the scene as edited.'),
     transition: Transition.default({ type: 'cut' }).describe('How this scene arrives.'),

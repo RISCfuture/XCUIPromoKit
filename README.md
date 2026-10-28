@@ -33,7 +33,7 @@ a linear pace, a caption that is simply there. Uploading stays with fastlane's
 Link `XCUIPromoKit` from the UI-test target that plays the promo scripts:
 
 ```swift
-.package(url: "https://github.com/RISCfuture/XCUIPromoKit", from: "1.2.0")
+.package(url: "https://github.com/RISCfuture/XCUIPromoKit", from: "2.0.0")
 ```
 
 Then add a `promo/` folder to the app with a `package.json` that depends on the
@@ -43,7 +43,7 @@ tooling at the same tag:
 {
   "private": true,
   "dependencies": {
-    "xcuipromokit": "github:RISCfuture/XCUIPromoKit#1.2.0&path:/tooling"
+    "xcuipromokit": "github:RISCfuture/XCUIPromoKit#2.0.0&path:/tooling"
   }
 }
 ```
@@ -174,10 +174,16 @@ size it in `brand.css` for the mode you choose.
 A preview lists the take's scenes in order. Each scene can set:
 
 - **`stretches`**: which of the take's kept stretches to use, in order, each
-  with an optional `trim` and `speed`. A speed plays the stretch at a `rate`
+  with an optional `trim` and `speed`. Each action the test keeps in the scene
+  is one stretch, numbered from 0 in the order it keeps them: a `keep`,
+  `keepTail`, `hold`, `holdOnScreenshot` or interaction, except that `type`
+  keeps the tap that focuses the field and then the typing. The numbers
+  depend only on the test, never on the recording. A stretch whose footage an
+  earlier one already shows is empty, and plays as nothing. `promokit prepare`
+  lists each scene's stretches by number. Stretches that run on from one
+  another at the same speed play as one. A speed plays the stretch at a `rate`
   times real time, reaching it from real time over `ramp` seconds and
-  returning over `ramp` seconds at the end. `promokit prepare` lists each scene's stretches by
-  number. All of them, if left out.
+  returning over `ramp` seconds at the end. All of them, if left out.
 - **`trim`**: seconds of footage to leave out from the start or end of the scene
   as edited.
 - **`transition`**: how the scene arrives. Choose `cut`, `dissolve`, `fade`

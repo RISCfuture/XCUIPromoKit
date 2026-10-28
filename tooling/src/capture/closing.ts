@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { run } from '../process.ts';
-import type { Manifest } from './manifest.ts';
+import { keepsFootage, type Manifest } from './manifest.ts';
 import type { Take } from './take.ts';
 
 /** The side, in pixels, of the blocks two screens are compared by. */
@@ -30,7 +30,7 @@ export async function scenesEndingEarly(
   const video = path.join(directory, manifest.video);
   const early: string[] = [];
   for (const { scene, file } of take.closingShots) {
-    const last = manifest.scenes.find(({ name }) => name === scene)?.ranges.at(-1);
+    const last = manifest.scenes.find(({ name }) => name === scene)?.ranges.findLast(keepsFootage);
     if (!last) continue;
     const time = Math.max(last.start, last.end - 1 / manifest.fps);
     const difference = await screenDifference(video, time, path.join(directory, file), manifest);

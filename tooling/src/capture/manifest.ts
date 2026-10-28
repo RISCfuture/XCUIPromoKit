@@ -5,6 +5,11 @@ import { DragPath, withDragPath } from './take.ts';
 const Range = z.object({ start: z.number(), end: z.number() });
 export type Range = z.infer<typeof Range>;
 
+/** Whether a stretch shows any footage of its own; one an earlier stretch covers shows none. */
+export function keepsFootage({ start, end }: Range): boolean {
+  return end > start;
+}
+
 const Tap = z.object({ time: z.number(), x: z.number(), y: z.number() });
 export type Tap = z.infer<typeof Tap>;
 

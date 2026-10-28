@@ -1,4 +1,4 @@
-import type { Manifest, Range, Scene } from '../capture/manifest.ts';
+import { keepsFootage, type Manifest, type Range, type Scene } from '../capture/manifest.ts';
 import { previewFormats } from '../devices.ts';
 import type {
   Caption,
@@ -17,6 +17,9 @@ type KeptRange = Range & { speed?: Speed };
 
 /** A recorded scene as the storyboard edits it. */
 type KeptScene = Omit<Scene, 'ranges'> & { ranges: KeptRange[] };
+
+/** Stretches closer together than this play as one, in seconds: about a frame at 30 fps. */
+const contiguity = 1 / 60;
 
 /** What a timeline is edited from: a preview's scenes, or a creative video's. */
 export type Timeline = Pick<Preview, 'scenes' | 'taps' | 'captionEntrance' | 'poster'>;
@@ -73,7 +76,7 @@ function resolveScene(
   if (!recorded) throw new Error(`The take has no scene “${scene.scene}”`);
 
   const { fps } = sources.manifest;
-  const chosen = scene.stretches ? selected(recorded, scene.stretches) : recorded;
+  const chosen = joined(scene.stretches ? selected(recorded, scene.stretches) : recorded);
   const kept = scene.trim ? trimmed(chosen, scene.trim) : chosen;
   const clips = kept.ranges.map((range) => clip(range, fps));
   const entrance = scene.caption?.entrance ?? timeline.captionEntrance;
@@ -103,6 +106,30 @@ function selected(scene: KeptScene, stretches: Stretch[]): KeptScene {
     return trim ? trimmed({ ...scene, ranges: [range] }, trim).ranges : [range];
   });
   return { ...scene, ranges };
+}
+
+/**
+ * The scene's footage as it plays: its empty stretches left out, and each stretch that runs on
+ * from the one before it at the same speed joined to it, so its pace ramps only at the run's ends.
+ */
+function joined(scene: KeptScene): KeptScene {
+  const ranges: KeptRange[] = [];
+  for (const range of scene.ranges.filter(keepsFootage)) {
+    const last = ranges.at(-1);
+    if (last && runsOn(last, range)) last.end = range.end;
+    else ranges.push({ ...range });
+  }
+  if (ranges.length === 0) throw new Error(`“${scene.name}” keeps no footage`);
+  return { ...scene, ranges };
+}
+
+function runsOn(before: KeptRange, after: KeptRange): boolean {
+  const gap = after.start - before.end;
+  return gap >= 0 && gap < contiguity && sameSpeed(before.speed, after.speed);
+}
+
+function sameSpeed(a: Speed | undefined, b: Speed | undefined): boolean {
+  return a?.rate === b?.rate && a?.ramp === b?.ramp;
 }
 
 /** A scene with `trim.start` seconds left out of the front of its footage and `trim.end` out of the back. */

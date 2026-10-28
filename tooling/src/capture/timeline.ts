@@ -1,15 +1,14 @@
-import type { Range, Scene } from './manifest.ts';
+import type { Scene } from './manifest.ts';
 import type { Take } from './take.ts';
 
-/** Stretches closer together than this are joined, in seconds: about a frame at 30 fps. */
-const contiguity = 1 / 60;
-
 /**
- * Turns a take's kept stretches into each scene's source ranges, in order.
+ * Turns a take's kept stretches into each scene's source ranges, in order: one range for each
+ * stretch the test kept, so a storyboard's stretch numbers follow the test's actions, however
+ * the recording timed them.
  *
  * Stretches can overlap: a `keepTail` reaches back over the end of the stretch before it. Footage
  * is kept once, by the earlier stretch, so each stretch only counts from where the previous one
- * ended. Taps and drags are filed under their scenes.
+ * ended, and one wholly inside another is kept empty. Taps and drags are filed under their scenes.
  */
 export function sceneTimeline(take: Take): Scene[] {
   const scenes: Scene[] = [];
@@ -17,11 +16,8 @@ export function sceneTimeline(take: Take): Scene[] {
 
   for (const segment of take.segments) {
     const start = Math.max(segment.start, keptUntil);
+    sceneNamed(segment.scene, scenes).ranges.push({ start, end: Math.max(start, segment.end) });
     keptUntil = Math.max(keptUntil, segment.end);
-    if (segment.end <= start) continue;
-
-    const scene = sceneNamed(segment.scene, scenes);
-    appendRange(scene.ranges, { start, end: segment.end });
   }
 
   for (const tap of take.taps) {
@@ -46,12 +42,6 @@ function sceneNamed(name: string, scenes: Scene[]): Scene {
   const scene: Scene = { name, ranges: [], taps: [], drags: [] };
   scenes.push(scene);
   return scene;
-}
-
-function appendRange(ranges: Range[], range: Range) {
-  const last = ranges.at(-1);
-  if (last && range.start - last.end < contiguity) last.end = range.end;
-  else ranges.push(range);
 }
 
 /** How long a scene's kept footage runs, in seconds. */

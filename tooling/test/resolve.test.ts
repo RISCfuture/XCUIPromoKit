@@ -49,6 +49,17 @@ const manifest: Manifest = {
         },
       ],
     },
+    {
+      name: 'load',
+      ranges: [
+        { start: 11, end: 12 },
+        { start: 12, end: 12 },
+        { start: 12, end: 13 },
+        { start: 13.01, end: 14 },
+      ],
+      taps: [],
+      drags: [],
+    },
   ],
 };
 
@@ -120,6 +131,34 @@ describe('resolvePreview', () => {
     expect(scene?.clips[1]).toMatchObject({ durationInFrames: 15, speed: { footageFrames: 60 } });
     expect(scene?.durationInFrames).toBe(45);
     expect(scene?.taps.at(-1)?.frame).toBe(38);
+  });
+
+  it('plays stretches that run on from one another at one pace as one clip, leaving out empty ones', () => {
+    const props = resolvePreview(preview({ scenes: [{ scene: 'load' }] }), sources);
+    expect(props.scenes[0]?.clips).toEqual([{ from: 330, durationInFrames: 90 }]);
+
+    const speed = { rate: 2, ramp: 0.25 };
+    const paced = resolvePreview(
+      preview({
+        scenes: [
+          {
+            scene: 'load',
+            stretches: [0, { index: 2, speed }, { index: 3, speed }],
+          },
+        ],
+      }),
+      sources
+    );
+    expect(paced.scenes[0]?.clips).toMatchObject([
+      { from: 330, durationInFrames: 30 },
+      { from: 360, speed: { ...speed, footageFrames: 60 } },
+    ]);
+  });
+
+  it('refuses a scene whose chosen stretches keep no footage', () => {
+    expect(() =>
+      resolvePreview(preview({ scenes: [{ scene: 'load', stretches: [1] }] }), sources)
+    ).toThrow(/keeps no footage/);
   });
 
   it('refuses a stretch the scene doesn’t have', () => {

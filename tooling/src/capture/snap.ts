@@ -1,4 +1,4 @@
-import type { Scene } from './manifest.ts';
+import { keepsFootage, type Scene } from './manifest.ts';
 
 /** A frame where the picture changes, scored by ffmpeg's scdet filter. */
 export type SceneChange = {
@@ -44,7 +44,7 @@ export function expectedChanges(
 ): (number | undefined)[] {
   return scenes.map((scene, index) => {
     if (index === 0) return undefined;
-    const [first] = scene.ranges;
+    const first = scene.ranges.find(keepsFootage);
     if (!first) return undefined;
     const tap = scene.taps.find(({ time }) => time >= first.start && time <= first.end);
     return tap?.time ?? first.start + options.landing;
@@ -68,8 +68,9 @@ export function strongestChange(
 
 /**
  * Starts each scene after the first on the frame its screen actually appears, and ends the scene
- * before it there, so neither shows a moment of the other. Scenes whose change can't be found
- * are left as they are. Expects scenes on the footage's clock.
+ * before it there, so neither shows a moment of the other. A stretch of the scene before that
+ * falls wholly after the change is kept empty, so its number still names it. Scenes whose change
+ * can't be found are left as they are. Expects scenes on the footage's clock.
  */
 export function snapScenes(
   scenes: Scene[],
@@ -82,13 +83,14 @@ export function snapScenes(
     const change = strongestChange(changes, expected - reach, expected + reach, options.threshold);
     const scene = snapped[index];
     const previous = snapped[index - 1];
-    const first = scene?.ranges[0];
+    const first = scene?.ranges.find(keepsFootage);
     if (!change || !first || !previous || change.time >= first.end) return;
 
     first.start = change.time;
-    previous.ranges = previous.ranges
-      .map(({ start, end }) => ({ start, end: Math.min(end, change.time) }))
-      .filter(({ start, end }) => end > start);
+    previous.ranges = previous.ranges.map(({ start, end }) => ({
+      start: Math.min(start, change.time),
+      end: Math.min(end, change.time),
+    }));
   });
   return snapped;
 }

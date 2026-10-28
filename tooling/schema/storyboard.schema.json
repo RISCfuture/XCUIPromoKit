@@ -198,7 +198,7 @@
                   "description": "A scene recorded in the take."
                 },
                 "stretches": {
-                  "description": "Which stretches to use, in order, each optionally trimmed; all of them if left out.",
+                  "description": "Which stretches to use, in order, each optionally trimmed; all of them if left out. Each action the test kept in the scene is a stretch, numbered from 0 in the order it kept them.",
                   "minItems": 1,
                   "type": "array",
                   "items": {
@@ -1102,7 +1102,7 @@
                       "description": "A scene recorded in the take."
                     },
                     "stretches": {
-                      "description": "Which stretches to use, in order, each optionally trimmed; all of them if left out.",
+                      "description": "Which stretches to use, in order, each optionally trimmed; all of them if left out. Each action the test kept in the scene is a stretch, numbered from 0 in the order it kept them.",
                       "minItems": 1,
                       "type": "array",
                       "items": {

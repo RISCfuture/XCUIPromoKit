@@ -114,17 +114,19 @@ export function changesWithinParts(
   );
 }
 
-/** Each scene's footage, kept within the part that filmed it. */
+/**
+ * Each scene's footage, kept within the part that filmed it. A stretch wholly outside its part is
+ * kept empty at the part's nearer end, so its number still names it.
+ */
 export function withinParts(scenes: Scene[], parts: Part[]): Scene[] {
   return scenes.map((scene) => {
     const part = parts.find(({ scenes: filmed }) => filmed.includes(scene.name));
     if (!part) return scene;
-    const ranges = scene.ranges
-      .map(({ start, end }) => ({
-        start: Math.max(start, part.offset),
-        end: Math.min(end, part.offset + part.length),
-      }))
-      .filter(({ start, end }) => end > start);
+    const partEnd = part.offset + part.length;
+    const ranges = scene.ranges.map(({ start, end }) => {
+      const kept = Math.min(Math.max(start, part.offset), partEnd);
+      return { start: kept, end: Math.max(kept, Math.min(end, partEnd)) };
+    });
     return { ...scene, ranges };
   });
 }

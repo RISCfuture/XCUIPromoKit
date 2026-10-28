@@ -10,7 +10,7 @@ import {
   unchangedActions,
 } from './activity.ts';
 import { scenesEndingEarly } from './closing.ts';
-import type { Manifest } from './manifest.ts';
+import { keepsFootage, type Manifest, type Range, type Scene } from './manifest.ts';
 import { parseSceneChanges, snapScenes, type SceneChange } from './snap.ts';
 import { changesWithinParts, layOutParts, onFootage, withinParts, type Part } from './parts.ts';
 import { readTake, type Take } from './take.ts';
@@ -92,7 +92,7 @@ export async function prepareTake(directory: string): Promise<Manifest> {
     lag: lag ?? 0,
     unchanged,
     endingEarly: [],
-    scenes: withinParts(snapScenes(sceneTimeline(narrowToMotion(shifted, moving)), changes), parts),
+    scenes: filmedScenes(shifted, moving, changes, parts),
   };
   manifest.endingEarly = await scenesEndingEarly(directory, take, manifest);
   for (const scene of manifest.endingEarly) {
@@ -108,6 +108,20 @@ export async function prepareTake(directory: string): Promise<Manifest> {
     `${JSON.stringify(manifest, null, 2)}\n`
   );
   return manifest;
+}
+
+/**
+ * Each scene's stretches on the footage, numbered as a storyboard picks them: one for each
+ * action the test kept in the scene, in order, whatever the recording shows. `take` is on the
+ * footage's clock.
+ */
+export function filmedScenes(
+  take: Take,
+  moving: number[],
+  changes: SceneChange[],
+  parts: Part[]
+): Scene[] {
+  return withinParts(snapScenes(sceneTimeline(narrowToMotion(take, moving)), changes), parts);
 }
 
 type HeldFrames = {
@@ -203,13 +217,19 @@ async function detectMotion(video: string): Promise<number[]> {
   return parseMotion(output);
 }
 
-/** Lists each scene's stretches by the numbers a storyboard picks them with. */
+/**
+ * Lists each scene's stretches by the numbers a storyboard picks them with, an empty one as
+ * `empty`.
+ */
 function describeStretches({ scenes }: Manifest) {
   for (const { name, ranges } of scenes) {
-    const stretches = ranges.map(
-      ({ start, end }, index) =>
-        `${index}: ${start.toFixed(2)}–${end.toFixed(2)} (${(end - start).toFixed(2)} s)`
-    );
+    const stretches = ranges.map((range, index) => `${String(index)}: ${describeRange(range)}`);
     say(`${name}  ${stretches.join('  ')}`);
   }
+}
+
+function describeRange(range: Range): string {
+  const { start, end } = range;
+  if (!keepsFootage(range)) return 'empty';
+  return `${start.toFixed(2)}–${end.toFixed(2)} (${(end - start).toFixed(2)} s)`;
 }

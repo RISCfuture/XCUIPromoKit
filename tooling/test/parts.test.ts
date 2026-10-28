@@ -65,11 +65,24 @@ describe('changesWithinParts', () => {
 });
 
 describe('withinParts', () => {
-  it('keeps a scene’s footage inside the part that filmed it', () => {
+  it('keeps a scene’s footage inside the part that filmed it, keeping its stretches’ numbers', () => {
     const scenes = withinParts(
-      [{ name: 'read', ranges: [{ start: 4.2, end: 6 }], taps: [], drags: [] }],
+      [
+        {
+          name: 'read',
+          ranges: [
+            { start: 3, end: 4 },
+            { start: 4.2, end: 6 },
+          ],
+          taps: [],
+          drags: [],
+        },
+      ],
       parts
     );
-    expect(scenes[0]?.ranges).toEqual([{ start: 4.6, end: 6 }]);
+    expect(scenes[0]?.ranges).toEqual([
+      { start: 4.6, end: 4.6 },
+      { start: 4.6, end: 6 },
+    ]);
   });
 });

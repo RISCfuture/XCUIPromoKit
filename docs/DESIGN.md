@@ -143,6 +143,18 @@ data on 2026-10-20.
   - A `keepTail` reaches back over the stretch before it.
   - The timeline keeps shared footage once, in the earlier stretch, so the
     scenes don't drift later and later.
+- **Measured timing varies from one recording to the next.**
+  - Narrowing an action to its frames, snapping scenes and fitting footage to
+    its recording all move a stretch's ends by what the footage shows. In two
+    recordings of one take, a stretch touched the next in one and fell a
+    tenth of a second short in the other.
+  - So nothing measured decides how many stretches a scene has. Each action
+    the test keeps is one stretch, numbered in the order kept, and a
+    storyboard's numbers name the same action in every recording.
+  - A stretch an earlier one covers, or one left outside its recording, is kept
+    empty rather than dropped. The render leaves it out, and plays stretches
+    that run on from one another at the same speed as one clip, so the picture
+    is the same as one long stretch.
 - **Bitrate floor.**
   - A mostly still UI compresses below Apple's 10 Mbps minimum.
   - The final encode is all-intra H.264 at 10–12 Mbps, in two passes. A single

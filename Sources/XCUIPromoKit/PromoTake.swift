@@ -11,6 +11,11 @@ public import XCUITestKit
  scene. The host cuts the recording down to those stretches and frames each scene as the
  storyboard says.
 
+ Each ``keep(_:)``, ``keepTail(settle:_:)``, ``hold(_:)``, ``holdOnScreenshot(_:)`` and
+ interaction keeps one stretch of its scene, and the storyboard picks them by number, from 0 in
+ the order they're kept. The numbers follow the test alone, so they name the same footage in
+ every recording of the take.
+
  ```swift
  func testRecordPreview() throws {
    let app = XCUIApplication()
