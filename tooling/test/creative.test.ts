@@ -8,10 +8,11 @@ const creative = (fields: Record<string, unknown>) =>
 
 describe('Creative', () => {
   it.each([
-    ['header', '3840x1646', 'jpg'],
+    ['header', '3840x1646', 'png'],
     ['header', '5244x2950', 'png'],
     ['search', '1920x1280', 'png'],
     ['search', '3000x2000', 'png'],
+    ['search', '3840x2560', 'jpg'],
     ['search', '5244x2950', 'png'],
     ['universal', '5244x2950', 'png'],
   ])('accepts a %s image at %s as %s', (slot, size, format) => {
@@ -23,8 +24,9 @@ describe('Creative', () => {
     ['search', '1800x1200', 'png'],
     ['search', '3840x2400', 'png'],
     ['universal', '3840x1646', 'png'],
+    ['header', '3840x1646', 'jpg'],
     ['header', '5244x2950', 'jpg'],
-    ['search', '3840x2560', 'jpg'],
+    ['search', '5244x2950', 'jpg'],
   ])('refuses a %s image at %s as %s', (slot, size, format) => {
     expect(creative({ slot, size, format }).success).toBe(false);
   });
@@ -60,32 +62,42 @@ describe('placements', () => {
         locale: 'en-US',
         path: 'en-US/universal-wide.png',
         placement_type: 'PRODUCT_PAGE_HEADER_ASSET',
+        placement_group: 'DEFAULT_PROFILE',
       },
       {
         locale: 'en-US',
         path: 'en-US/universal-wide.png',
         placement_type: 'APP_STORE_SEARCH_RESULTS_ASSET',
+        placement_group: 'DEFAULT_PROFILE',
       },
       {
         locale: 'en-US',
         path: 'en-US/header-tall.png',
         placement_type: 'PRODUCT_PAGE_HEADER_ASSET',
+        placement_group: 'DEFAULT_PROFILE',
       },
     ]);
   });
 
-  it('leaves videos out, since deliver uploads images only', () => {
-    const video = parse({
-      id: 'loop',
-      slot: 'header',
-      size: '3840x1646',
-      template: 'c',
-      footage: { take: 'loop', scenes: [{ scene: 'opening' }] },
-    });
-    expect(placements([video, header], ['en-US'], '{id}').map(({ path }) => path)).toEqual([
-      'en-US/tall.png',
+  it('lists a video with its poster’s time code, and without one when it has no poster', () => {
+    const video = (id: string) =>
+      parse({
+        id,
+        slot: 'header',
+        size: '3840x1646',
+        template: 'c',
+        footage: { take: 'loop', scenes: [{ scene: 'opening' }] },
+      });
+    const posters = new Map([['en-US/loop.mp4', '00:00:02:15']]);
+    expect(
+      placements([video('loop'), video('plain')], ['en-US'], '{id}', posters).map(
+        ({ path, preview_frame_time_code }) => [path, preview_frame_time_code]
+      )
+    ).toEqual([
+      ['en-US/loop.mp4', '00:00:02:15'],
+      ['en-US/plain.mp4', undefined],
     ]);
-    expect(creativeFileName(video, '{id}')).toBe('loop.mp4');
+    expect(creativeFileName(video('loop'), '{id}')).toBe('loop.mp4');
   });
 
   it('keeps a universal image out of search when it says so', () => {

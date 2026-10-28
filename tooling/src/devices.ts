@@ -146,7 +146,7 @@ const isSearchSize = (size: Size) =>
 
 /**
  * Why `slot` can't be an image of `size` in `format`, or undefined if it can. JPG is accepted only
- * for the 21:9 header, and only PNG for the 16:9 universal size.
+ * for a 3:2 search image; the header and the 16:9 universal size are PNG only.
  */
 export function creativeImageProblem(
   slot: CreativeSlot,
@@ -159,8 +159,8 @@ export function creativeImageProblem(
     universal: isUniversal(size),
   }[slot];
   if (!fits) return `${describe(size)} isn't a ${slot} size; ${creativeSizes[slot]}`;
-  if (format === 'jpg' && !sameSize(size, headerSize))
-    return 'only the 3840×1646 header may be a JPG; use PNG';
+  if (format === 'jpg' && !(slot === 'search' && isSearchSize(size)))
+    return 'only a 3:2 search image may be a JPG; use PNG';
   return undefined;
 }
 

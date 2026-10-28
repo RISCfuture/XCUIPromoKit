@@ -41,15 +41,17 @@ number here.
 Checked against Apple's
 [creative asset specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/creative-assets-specifications),
 [asset best practices](https://developer.apple.com/app-store/asset-best-practices/)
-and its templates on 2026-10-15.
+and its templates on 2026-10-15, and against App Store Connect's reference
+data on 2026-10-20.
 
 - **Sizes:**
-  - Header: 3840×1646 (21:9, JPG or PNG) or 5244×2950 (16:9, PNG).
-  - Search result: 3:2 from 1920×1280 to 3840×2560, or 5244×2950 PNG.
+  - Header: 3840×1646 (21:9) or 5244×2950 (16:9), both PNG.
+  - Search result: 3:2 from 1920×1280 to 3840×2560 (JPG or PNG), or 5244×2950
+    PNG.
   - The 16:9 image is the universal asset: "Use header asset in search results"
     places it in both.
-- **Video:** header 3840×1646, and search 3:2, at 30 or 60 fps for 5–30 s, as
-  .mov, .m4v or .mp4. There's no 16:9 video. Search plays video muted with no
+- **Video:** header 3840×1646 for 5–30 s, and search 3:2 for 15–30 s, at 30
+  or 60 fps, as .mov, .m4v or .mp4. There's no 16:9 video. Search plays video muted with no
   way to unmute; the product page starts muted. Both loop. A video has a
   poster frame (`previewFrameTimeCode`). Apple publishes no codec, bitrate,
   audio or file-size rule for creative video; App Store Connect's reference
@@ -91,10 +93,12 @@ and its templates on 2026-10-15.
 - **Uploading:** App Store Connect's App Asset Library
   (`appAssetLibraryImages`, `appAssetLibraryVideos`,
   `appAssetLibraryPlacements`, with placement types
-  `PRODUCT_PAGE_HEADER_ASSET` and `APP_STORE_SEARCH_RESULTS_ASSET`). fastlane
-  PR #30442 adds `deliver`'s `creative_assets` option and Spaceship models for
-  images; neither handles video yet. Its entries are exactly `locale`, `path`,
-  `placement_type` and `placement_group`; unknown keys are an error.
+  `PRODUCT_PAGE_HEADER_ASSET` and `APP_STORE_SEARCH_RESULTS_ASSET`, each in
+  the one placement group `DEFAULT_PROFILE`). fastlane PR #30442 adds
+  `deliver`'s `creative_assets` option and Spaceship models for images, and
+  PR #30457 extends them to video. Its entries are exactly `locale`, `path`,
+  `placement_type` and `placement_group`, plus `preview_frame_time_code` for a
+  video; unknown keys are an error.
 
 ## Capture pitfalls the tooling handles
 

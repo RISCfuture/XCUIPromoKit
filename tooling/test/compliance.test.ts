@@ -103,27 +103,27 @@ describe('checkCreative', () => {
     streams: [{ codec_type: 'video', codec_name, width, height, pix_fmt }],
     format: { format_name: 'image2' },
   });
-  const header = Creative.parse({
-    id: 'header',
-    slot: 'header',
-    size: '3840x1646',
+  const search = Creative.parse({
+    id: 'search',
+    slot: 'search',
+    size: '3840x2560',
     format: 'jpg',
-    template: 'header.html',
+    template: 'search.html',
     device: 'iPhone 18 Pro Max',
   });
 
   it('passes an opaque image of the size and format its slot accepts', () => {
-    expect(checkCreative('h.jpg', image('mjpeg', 3840, 1646, 'yuvj444p'), header)).toEqual([]);
+    expect(checkCreative('s.jpg', image('mjpeg', 3840, 2560, 'yuvj444p'), search)).toEqual([]);
   });
 
   it('flags an image that is neither PNG nor JPG', () => {
-    expect(rules(checkCreative('h.webp', image('webp', 3840, 1646, 'yuv420p'), header))).toEqual([
+    expect(rules(checkCreative('s.webp', image('webp', 3840, 2560, 'yuv420p'), search))).toEqual([
       'format',
     ]);
   });
 
   it('flags a size the storyboard didn’t ask for, a size the slot refuses, and alpha', () => {
-    expect(rules(checkCreative('h.png', image('png', 3840, 2560, 'rgba'), header))).toEqual([
+    expect(rules(checkCreative('s.png', image('png', 3840, 1646, 'rgba'), search))).toEqual([
       'size',
       'slot',
       'alpha',
@@ -150,6 +150,14 @@ describe('checkCreativeVideo', () => {
   it('passes a header video at 30 or 60 fps within 5–30 s', () => {
     expect(checkCreativeVideo('h.mp4', video(3840, 1646, '30/1', '12'), header)).toEqual([]);
     expect(checkCreativeVideo('h.mp4', video(3840, 1646, '60/1', '5'), header)).toEqual([]);
+  });
+
+  it('holds a search video to 15 s at least', () => {
+    const search = { ...header, slot: 'search' as const, size: { width: 3840, height: 2560 } };
+    expect(rules(checkCreativeVideo('s.mp4', video(3840, 2560, '30/1', '12'), search))).toEqual([
+      'length',
+    ]);
+    expect(checkCreativeVideo('s.mp4', video(3840, 2560, '30/1', '15'), search)).toEqual([]);
   });
 
   it('flags a size the slot refuses, the length and the frame rate', () => {

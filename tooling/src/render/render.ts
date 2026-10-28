@@ -164,15 +164,23 @@ async function renderCreatives(session: Session, creatives: Creative[]) {
     return;
   }
   const { creativeNames } = project.config;
+  const posters = new Map<string, string>();
   for (const [locale, copy] of session.copy) {
     const staging = stagingDirectory(project, 'creatives', locale);
     await prepareStaging(staging);
     for (const creative of creatives) {
       const inputProps = await creativeProps(project, session.stage, creative, locale, copy);
-      const destination = path.join(staging, creativeFileName(creative, creativeNames));
-      if (creative.footage)
-        await renderCreativeVideo(session, creative.footage, inputProps, destination);
-      else await renderCreative(session.serveUrl, inputProps, project.workDirectory, destination);
+      const file = creativeFileName(creative, creativeNames);
+      const destination = path.join(staging, file);
+      if (creative.footage) {
+        const poster = await renderCreativeVideo(
+          session,
+          creative.footage,
+          inputProps,
+          destination
+        );
+        if (poster) posters.set(path.posix.join(locale, file), poster);
+      } else await renderCreative(session.serveUrl, inputProps, project.workDirectory, destination);
     }
   }
   for (const locale of session.copy.keys()) {
@@ -183,17 +191,20 @@ async function renderCreatives(session: Session, creatives: Creative[]) {
   }
   await writePlacements(
     project.resolve(project.config.output.creatives),
-    placements(creatives, [...session.copy.keys()], creativeNames)
+    placements(creatives, [...session.copy.keys()], creativeNames, posters)
   );
 }
 
-/** Renders a creative video, then writes its poster beside it if the storyboard names one. */
+/**
+ * Renders a creative video, then writes its poster beside it if the storyboard names one.
+ * Returns the poster's time code, if there is one.
+ */
 async function renderCreativeVideo(
   session: Session,
   footage: CreativeFootage,
   inputProps: CreativeProps,
   destination: string
-) {
+): Promise<string | undefined> {
   const composition = await selectComposition({
     serveUrl: session.serveUrl,
     id: 'Creative',
@@ -216,7 +227,9 @@ async function renderCreativeVideo(
   say(`rendered ${path.basename(destination)}`);
 
   const poster = inputProps.footage && posterFrame(footage, inputProps.footage);
-  if (poster) await renderPoster(session, composition, inputProps, poster.frame, destination);
+  if (!poster) return undefined;
+  await renderPoster(session, composition, inputProps, poster.frame, destination);
+  return timeCode(poster.frame, composition.fps);
 }
 
 async function renderScreenshots(session: Session, screenshots: Screenshot[]) {

@@ -8,17 +8,26 @@ const placementTypes = {
   search: 'APP_STORE_SEARCH_RESULTS_ASSET',
 } as const;
 
+/**
+ * The placement group App Store Connect's reference data gives both placements: one group, holding
+ * one asset per localization.
+ */
+export const placementGroup = 'DEFAULT_PROFILE';
+
 /** Lists, beside the locale folders, every placement a render produced, for deliver. */
 export const placementsFileName = 'creative_assets.json';
 
 /**
- * One entry of creative_assets.json: what deliver's `creative_assets` option takes, but for the
- * placement group, which the Fastfile adds. `path` is relative to creative_assets.json.
+ * One entry of creative_assets.json, exactly as deliver's `creative_assets` option takes it, but
+ * with `path` relative to creative_assets.json. A video carries its poster's time code when the
+ * storyboard names a poster; otherwise Apple picks the frame.
  */
 export type Placement = {
   locale: string;
   path: string;
   placement_type: (typeof placementTypes)[keyof typeof placementTypes];
+  placement_group: typeof placementGroup;
+  preview_frame_time_code?: string;
 };
 
 /** A creative's file name in its locale folder, from the configured pattern: a video is an MP4. */
@@ -34,24 +43,27 @@ export function creativeFileName(creative: Creative, pattern: string): string {
 }
 
 /**
- * The placements each creative image fills, for deliver: a universal asset also fills search
- * unless it says not. Videos are left out, since deliver uploads images only.
+ * The placements each creative fills, for deliver: a universal asset also fills search unless it
+ * says not. `posters` maps a video's path, as listed, to its poster's time code.
  */
 export function placements(
   creatives: readonly Creative[],
   locales: readonly string[],
-  pattern: string
+  pattern: string,
+  posters: ReadonlyMap<string, string> = new Map()
 ): Placement[] {
   return locales.flatMap((locale) =>
-    creatives
-      .filter(({ footage }) => !footage)
-      .flatMap((creative) =>
-        placementsOf(creative).map((placement) => ({
-          locale,
-          path: path.posix.join(locale, creativeFileName(creative, pattern)),
-          placement_type: placementTypes[placement],
-        }))
-      )
+    creatives.flatMap((creative) => {
+      const file = path.posix.join(locale, creativeFileName(creative, pattern));
+      const poster = posters.get(file);
+      return placementsOf(creative).map((placement) => ({
+        locale,
+        path: file,
+        placement_type: placementTypes[placement],
+        placement_group: placementGroup,
+        ...(poster && { preview_frame_time_code: poster }),
+      }));
+    })
   );
 }
 

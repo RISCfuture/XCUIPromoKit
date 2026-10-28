@@ -105,14 +105,17 @@ export function checkScreenshot(file: string, media: Probe): Finding[] {
   return findings;
 }
 
-/** Apple's limits for creative video. */
+/** Apple's limits for creative video: a header runs 5–30 s, a search asset 15–30 s. */
 export const creativeVideoRules = {
-  minimumSeconds: 5,
+  minimumSeconds: { header: 5, search: 15, universal: 5 },
   maximumSeconds: 30,
   frameRates: [30, 60],
 } as const;
 
-/** Checks a rendered creative video is the size its slot accepts, at 30 or 60 fps, for 5–30 s. */
+/**
+ * Checks a rendered creative video is the size its slot accepts, at 30 or 60 fps, for the length
+ * its slot allows.
+ */
 export function checkCreativeVideo(file: string, media: Probe, creative: Creative): Finding[] {
   const subject = path.basename(file);
   const video = videoStream(media);
@@ -123,10 +126,15 @@ export function checkCreativeVideo(file: string, media: Probe, creative: Creativ
   const problem = creativeVideoProblem(creative.slot, size);
   if (problem) findings.push(error(subject, 'slot', problem));
   const seconds = Number(media.format.duration ?? 0);
-  const { minimumSeconds, maximumSeconds, frameRates } = creativeVideoRules;
+  const { maximumSeconds, frameRates } = creativeVideoRules;
+  const minimumSeconds = creativeVideoRules.minimumSeconds[creative.slot];
   if (seconds < minimumSeconds || seconds > maximumSeconds)
     findings.push(
-      error(subject, 'length', `runs ${seconds.toFixed(2)} s; creative video runs 5–30 s`)
+      error(
+        subject,
+        'length',
+        `runs ${seconds.toFixed(2)} s; a ${creative.slot} video runs ${String(minimumSeconds)}–${String(maximumSeconds)} s`
+      )
     );
   const fps = rate(video.avg_frame_rate);
   if (!frameRates.some((allowed) => Math.abs(fps - allowed) < 0.01))

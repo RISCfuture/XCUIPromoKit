@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-10-28
+
+### Added
+
+- `creative_assets.json` lists creative videos too, each with
+  `preview_frame_time_code` from its `poster`, for `deliver`'s video support
+  (fastlane PR #30457).
+- Every `creative_assets.json` entry carries `placement_group`
+  (`DEFAULT_PROFILE`), so the listing is exactly what `deliver`'s
+  `creative_assets` option takes.
+
+### Fixed
+
+- A JPG creative is accepted only as a 3:2 search image; the header and the
+  universal size are PNG only, as App Store Connect requires.
+- `promokit check` holds a search video to 15–30 s; a header video stays
+  5–30 s.
+
 ## [1.1.0] - 2026-10-15
 
 ### Added

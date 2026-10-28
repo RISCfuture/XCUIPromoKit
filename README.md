@@ -33,7 +33,7 @@ a linear pace, a caption that is simply there. Uploading stays with fastlane's
 Link `XCUIPromoKit` from the UI-test target that plays the promo scripts:
 
 ```swift
-.package(url: "https://github.com/RISCfuture/XCUIPromoKit", from: "1.1.0")
+.package(url: "https://github.com/RISCfuture/XCUIPromoKit", from: "1.2.0")
 ```
 
 Then add a `promo/` folder to the app with a `package.json` that depends on the
@@ -43,7 +43,7 @@ tooling at the same tag:
 {
   "private": true,
   "dependencies": {
-    "xcuipromokit": "github:RISCfuture/XCUIPromoKit#1.1.0&path:/tooling"
+    "xcuipromokit": "github:RISCfuture/XCUIPromoKit#1.2.0&path:/tooling"
   }
 }
 ```
@@ -248,38 +248,37 @@ so one template can serve several sizes. Style the canvas, not `body`.
 ```
 
 The storyboard accepts only the sizes and formats Apple does. A header is
-3840×1646 (PNG or JPG) or 5244×2950 (PNG); search is 3:2 from 1920×1280 to
-3840×2560, or 5244×2950; universal is 5244×2950. A universal image also fills
-search unless it says `"search": false`.
+3840×1646 or 5244×2950, as PNG; search is 3:2 from 1920×1280 to 3840×2560 (PNG
+or JPG), or 5244×2950 (PNG); universal is 5244×2950 (PNG). A universal image
+also fills search unless it says `"search": false`.
 
 A creative with `footage` is a video: a 3840×1646 header, or a 3:2 search
 asset. `footage` names a take and its scenes, edited exactly as a preview's
 (stretches, trims, speed, transitions, captions, zooms, taps and a `poster`).
-The video runs at the take's 30 fps, for 5–30 s, and is written as H.264 with a
-silent stereo track, since the store plays it muted. A `poster` is written
+The video runs at the take's 30 fps, for 5–30 s as a header or 15–30 s as a
+search asset, and is written as H.264 with a silent stereo track, since the
+store plays it muted. A `poster` is written
 beside it as `<name>-poster.txt`, with its frame as `<name>-poster.png`.
 
 `promokit render` writes each asset to `output.creatives`, one folder per
 locale, named by `creativeNames` (by default `{id}`; `{slot}`, `{width}` and
 `{height}` also work). Beside the folders, `creative_assets.json` lists every
-image's placements as `{locale, path, placement_type}`, with `path` relative
-to it. That
-is the shape of `deliver`'s `creative_assets` option, less the placement group,
-which the Fastfile adds:
+asset's placements as `{locale, path, placement_type, placement_group}`, with
+`path` relative to it. A video with a `poster` also carries
+`preview_frame_time_code`; without one, Apple picks the frame. The placement
+group is `DEFAULT_PROFILE`, the only group App Store Connect's reference data
+gives either placement. That is the shape of `deliver`'s `creative_assets`
+option, so the Fastfile only makes each path absolute:
 
 ```ruby
 directory = File.expand_path('creative_assets', __dir__)
 listing = File.read(File.join(directory, 'creative_assets.json'))
 creative_assets = JSON.parse(listing).map do |entry|
-  group = ENV.fetch("ASC_#{entry['placement_type']}_GROUP")
-  entry.merge('path' => File.join(directory, entry['path']),
-              'placement_group' => group)
+  entry.merge('path' => File.join(directory, entry['path']))
 end
 ```
 
-`deliver` gains that option with fastlane PR #30442, which uploads images only,
-so `creative_assets.json` lists no videos. Upload creative video by hand until
-fastlane supports it.
+`deliver` takes images with fastlane PR #30442 and videos with PR #30457.
 
 Apple's templates mark an art safe area: the part every device's crop keeps.
 `promokit studio --creative <id>` outlines it; renders never include it.
@@ -343,9 +342,9 @@ It checks:
   previews of any one size.
 - **Screenshots:** an accepted display size, and no alpha channel.
 - **Creative assets:** the storyboard's size, one the slot accepts, PNG or (for
-  a 3840×1646 header only) JPG, and no alpha channel. A video must be a size
-  its slot accepts, at 30 or 60 fps, for 5–30 s. A creative not yet rendered
-  in some locale is a warning.
+  a 3:2 search image only) JPG, and no alpha channel. A video must be a size
+  its slot accepts, at 30 or 60 fps, for 5–30 s as a header or 15–30 s as a
+  search asset. A creative not yet rendered in some locale is a warning.
 - **Copy:** prices, URLs, legal symbols, other platforms and marketplaces,
   Apple's recognitions (Editor's Choice, App of the Day and the like) and the
   reserved "For Kids" and "For Children" are errors. "Free", superlatives,
