@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   marks each tap at the first frame that changes around the touch, and only
   failing that at the first frame that changes anywhere, which a shimmer
   elsewhere could put up to an action's whole window early.
+- An iPad's status bar shows Apple's date, Tuesday, January 9, beside 9:41,
+  not the day the take was recorded, and every device shows a full battery
+  that isn't charging, as Apple's marketing images do.
 
 ## [2.0.0] - 2026-10-28
 
