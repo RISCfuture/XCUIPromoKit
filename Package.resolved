@@ -1,5 +1,5 @@
 {
-  "originHash" : "8233053ded2eca1112c2342156ac59ef229597e1acb79b4e9dce585529612b53",
+  "originHash" : "0e8f5e537f909c394252b340229e449294e27af290c300256cd423ee0fc245e7",
   "pins" : [
     {
       "identity" : "swift-docc-plugin",
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/RISCfuture/XCUITestKit",
       "state" : {
-        "revision" : "950db845e2e4637f0b4769c880077f8681839649",
-        "version" : "1.1.0"
+        "revision" : "efeb5ce59b772645279891ba83d4c8c9873c5e77",
+        "version" : "1.2.0"
       }
     }
   ],

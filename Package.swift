@@ -29,7 +29,7 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(url: "https://github.com/RISCfuture/XCUITestKit", from: "1.0.0"),
+    .package(url: "https://github.com/RISCfuture/XCUITestKit", from: "1.2.0"),
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.5.0")
   ],
   targets: [
