@@ -7,6 +7,9 @@ import {
   narrowToMotion,
   parseMotion,
   shiftTake,
+  tapActivities,
+  touchBox,
+  touchMotionThreshold,
   unchangedActions,
 } from './activity.ts';
 import { scenesEndingEarly } from './closing.ts';
@@ -92,7 +95,13 @@ export async function prepareTake(directory: string): Promise<Manifest> {
     lag: lag ?? 0,
     unchanged,
     endingEarly: [],
-    scenes: filmedScenes(shifted, moving, changes, parts),
+    scenes: filmedScenes(
+      shifted,
+      moving,
+      changes,
+      parts,
+      await detectMotionNearTaps(video, shifted, { width: stream.width, height: stream.height })
+    ),
   };
   manifest.endingEarly = await scenesEndingEarly(directory, take, manifest);
   for (const scene of manifest.endingEarly) {
@@ -119,9 +128,13 @@ export function filmedScenes(
   take: Take,
   moving: number[],
   changes: SceneChange[],
-  parts: Part[]
+  parts: Part[],
+  movingNearTaps: (number[] | undefined)[] = []
 ): Scene[] {
-  return withinParts(snapScenes(sceneTimeline(narrowToMotion(take, moving)), changes), parts);
+  return withinParts(
+    snapScenes(sceneTimeline(narrowToMotion(take, moving, movingNearTaps)), changes),
+    parts
+  );
 }
 
 type HeldFrames = {
@@ -215,6 +228,52 @@ async function detectMotion(video: string): Promise<number[]> {
     '-',
   ]);
   return parseMotion(output);
+}
+
+/**
+ * For each tap, the times of frames during the action that made it that differ from the one
+ * before around the touch, by their average difference across a box `touchBox` of the frame's
+ * width on a side; `undefined` for a tap no action made. `take` is on the footage's clock.
+ */
+async function detectMotionNearTaps(
+  video: string,
+  take: Take,
+  size: { width: number; height: number }
+): Promise<(number[] | undefined)[]> {
+  const side = Math.round(size.width * touchBox);
+  const activities = tapActivities(take);
+  return Promise.all(
+    take.taps.map(async (tap, index) => {
+      const activity = activities[index];
+      if (!activity) return undefined;
+      const start = Math.max(0, activity.start);
+      const x = Math.min(Math.max(Math.round(tap.x * size.width - side / 2), 0), size.width - side);
+      const y = Math.min(
+        Math.max(Math.round(tap.y * size.height - side / 2), 0),
+        size.height - side
+      );
+      const output = await run('ffmpeg', [
+        '-nostdin',
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-ss',
+        String(start),
+        '-t',
+        String(activity.end - start),
+        '-i',
+        video,
+        '-vf',
+        `crop=${String(side)}:${String(side)}:${String(x)}:${String(y)},` +
+          'tblend=all_mode=difference,signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-',
+        '-an',
+        '-f',
+        'null',
+        '-',
+      ]);
+      return parseMotion(output, touchMotionThreshold, 'YAVG').map((time) => time + start);
+    })
+  );
 }
 
 /**

@@ -20,7 +20,7 @@ import type {
 } from '../storyboard/schema.ts';
 import { readHighlights } from './highlights.ts';
 import { readWindow } from './window.ts';
-import { encodeCreativeVideo, encodePreview, flattenImage } from './encode.ts';
+import { encodeCreativeVideo, encodePreview, flattenImage, tagMasterColors } from './encode.ts';
 import { creativeFiles, creativeProps, renderCreative } from './creative.ts';
 import { clearPlacements, creativeFileName, placements, writePlacements } from './placements.ts';
 import { prepareStaging, publish } from './publish.ts';
@@ -28,6 +28,9 @@ import { preparedTake } from './takes.ts';
 import { stage, stagePaths, type Stage } from './stage.ts';
 
 export const entryPoint = fileURLToPath(new URL('../../src/remotion/index.ts', import.meta.url));
+
+/** Lossless frames for a ProRes master, in place of Remotion's default JPEG at quality 80. */
+const masterImageFormat = 'png';
 
 export type RenderKind = 'previews' | 'screenshots' | 'creatives';
 
@@ -124,9 +127,11 @@ async function renderPreview(session: Session, preview: Preview, copy: Copy, des
     serveUrl: session.serveUrl,
     codec: 'prores',
     proResProfile: 'hq',
+    imageFormat: masterImageFormat,
     outputLocation: master,
     inputProps,
   });
+  await tagMasterColors(master);
 
   await encodePreview(master, destination);
   say(`rendered ${path.basename(destination)}`);
@@ -220,9 +225,11 @@ async function renderCreativeVideo(
     serveUrl: session.serveUrl,
     codec: 'prores',
     proResProfile: 'hq',
+    imageFormat: masterImageFormat,
     outputLocation: master,
     inputProps,
   });
+  await tagMasterColors(master);
   await encodeCreativeVideo(master, destination);
   say(`rendered ${path.basename(destination)}`);
 

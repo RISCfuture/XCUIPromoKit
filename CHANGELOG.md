@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- A rendered ProRes master shows the colours its preview does. Its colour
+  atom, and every preview and creative video encoded from it, now say how the
+  pixels were encoded: BT.709 primaries, the sRGB transfer and the BT.601
+  matrix. Before, the master named no matrix and carried the sRGB transfer only
+  where QuickTime ignores it, so QuickTime showed it lighter, and players had to
+  guess the matrix of the previews.
+- Masters are rendered from PNG frames, not Remotion's default JPEG at quality
+  80, so they lose nothing before ProRes.
+- A tap's mark lands as the app responds to the tap, even while something else
+  on screen keeps changing, such as a shimmer or a playing video. `prepare`
+  marks each tap at the first frame that changes around the touch, and only
+  failing that at the first frame that changes anywhere, which a shimmer
+  elsewhere could put up to an action's whole window early.
+- An iPad's status bar shows Apple's date, Tuesday, January 9, beside 9:41,
+  not the day the take was recorded, and every device shows a full battery
+  that isn't charging, as Apple's marketing images do.
+
 ## [2.0.0] - 2026-10-28
 
 ### Changed

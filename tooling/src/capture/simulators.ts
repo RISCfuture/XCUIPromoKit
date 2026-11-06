@@ -12,10 +12,12 @@ const RuntimeList = z.object({
 
 type Simulator = { name: string; udid: string; runtime: string };
 
-/** The status bar every capture shows. */
+/**
+ * The status bar every capture shows, as Apple's own marketing images do: full signal and a full
+ * battery that isn't charging, at 9:41 on Tuesday, January 9, 2007. An iPad shows the date beside
+ * the time, so the time is a whole date, in the simulator's time zone, which is the Mac's.
+ */
 const statusBar = [
-  '--time',
-  '9:41',
   '--dataNetwork',
   'wifi',
   '--wifiBars',
@@ -23,10 +25,16 @@ const statusBar = [
   '--cellularBars',
   '4',
   '--batteryState',
-  'charged',
+  'discharging',
   '--batteryLevel',
   '100',
 ];
+
+/**
+ * The status bar's time, set in a call of its own: given with the other options, simctl shows the
+ * iPad a different day.
+ */
+const statusBarTime = ['--time', new Date(2007, 0, 9, 9, 41).toISOString()];
 
 /** The name of the simulator an app owns for a device type, such as `promokit-FART-iphone-18-pro`. */
 export function simulatorName(app: string, deviceType: string) {
@@ -81,6 +89,7 @@ export async function bootOwnedSimulator(
   }
   await run('xcrun', ['simctl', 'bootstatus', udid, '-b']);
   await run('xcrun', ['simctl', 'status_bar', udid, 'override', ...statusBar]);
+  await run('xcrun', ['simctl', 'status_bar', udid, 'override', ...statusBarTime]);
   return udid;
 }
 
