@@ -1,7 +1,29 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rename, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { ffmpeg } from '../process.ts';
+
+/**
+ * How a rendered master's colours are encoded, for the master and every encode made from it.
+ * Remotion's frames are sRGB, and its default colour space converts them to YUV with ffmpeg's
+ * BT.601 matrix. Its ProRes names no matrix, and carries the sRGB transfer only where QuickTime
+ * ignores it, so QuickTime showed a master lighter than the preview encoded from it.
+ */
+const colorTags = [
+  '-color_primaries',
+  'bt709',
+  '-color_trc',
+  'iec61966-2-1',
+  '-colorspace',
+  'smpte170m',
+];
+
+/** Tags a rendered master with how its colours are encoded, without re-encoding it. */
+export async function tagMasterColors(master: string) {
+  const tagged = `${master}.tagged.mov`;
+  await ffmpeg(['-i', master, '-c', 'copy', ...colorTags, '-movflags', '+write_colr', tagged]);
+  await rename(tagged, master);
+}
 
 /** Apple's app preview limits that the encode aims for. */
 export const previewEncoding = {
@@ -62,6 +84,7 @@ function videoOptions(log: string, pass: 1 | 2): string[] {
     '4.0',
     '-pix_fmt',
     'yuv420p',
+    ...colorTags,
     '-r',
     String(fps),
     '-g',
@@ -104,6 +127,7 @@ export async function encodeCreativeVideo(source: string, destination: string) {
     'high',
     '-pix_fmt',
     'yuv420p',
+    ...colorTags,
     '-crf',
     '14',
     '-preset',
