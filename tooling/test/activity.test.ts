@@ -4,6 +4,7 @@ import {
   narrowToMotion,
   parseMotion,
   shiftTake,
+  tapActivities,
   unchangedActions,
 } from '../src/capture/activity.ts';
 import type { Take } from '../src/capture/take.ts';
@@ -51,6 +52,30 @@ describe('parseMotion', () => {
     ].join('\n');
     expect(parseMotion(output)).toEqual([20.9]);
   });
+
+  it('reads a frame’s average difference when asked', () => {
+    const output = [
+      'frame:0 pts:0 pts_time:0.2',
+      'lavfi.signalstats.YAVG=1.85',
+      'frame:1 pts:1 pts_time:0.233',
+      'lavfi.signalstats.YAVG=6.74',
+    ].join('\n');
+    expect(parseMotion(output, 3, 'YAVG')).toEqual([0.233]);
+  });
+
+  it('reads a tiny difference written with an exponent as tiny', () => {
+    const output = [
+      'frame:7 pts:4096 pts_time:0.266667',
+      'lavfi.signalstats.YAVG=8.01154e-05',
+    ].join('\n');
+    expect(parseMotion(output, 3, 'YAVG')).toEqual([]);
+  });
+});
+
+describe('tapActivities', () => {
+  it('finds the action that made each tap', () => {
+    expect(tapActivities(take)).toEqual([activity(2, 4.4), activity(5, 7.4)]);
+  });
 });
 
 describe('estimateLag', () => {
@@ -87,6 +112,11 @@ describe('narrowToMotion', () => {
   it('marks a tap where the touch lands', () => {
     const narrowed = narrowToMotion(take, [3, 3.5, 6.2]);
     expect(narrowed.taps.map(({ time }) => time)).toEqual([3, 6.2]);
+  });
+
+  it('marks a tap at its action’s first change near the touch, when there is one', () => {
+    const narrowed = narrowToMotion(take, [3, 3.5, 6.2, 6.5], [[1.8, 3.5], [8]]);
+    expect(narrowed.taps.map(({ time }) => time)).toEqual([3.5, 6.2]);
   });
 
   it('starts a drag moving at its action’s first change', () => {

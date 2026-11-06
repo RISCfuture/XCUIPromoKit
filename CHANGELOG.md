@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   guess the matrix of the previews.
 - Masters are rendered from PNG frames, not Remotion's default JPEG at quality
   80, so they lose nothing before ProRes.
+- A tap's mark lands as the app responds to the tap, even while something else
+  on screen keeps changing, such as a shimmer or a playing video. `prepare`
+  marks each tap at the first frame that changes around the touch, and only
+  failing that at the first frame that changes anywhere, which a shimmer
+  elsewhere could put up to an action's whole window early.
 
 ## [2.0.0] - 2026-10-28
 

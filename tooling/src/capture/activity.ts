@@ -20,15 +20,32 @@ export const defaultActivityOptions: ActivityOptions = { threshold: 5, reach: 2 
 export const motionThreshold = 6;
 
 /**
- * Reads the output of `tblend=all_mode=difference,signalstats,metadata=print:key=…YMAX`: the
- * times of frames that differ from the one before.
+ * The least average difference, in luma levels, between consecutive frames across the box around
+ * a touch that counts as the app responding to it. Compression leaves about 0, and a shimmer
+ * passing through the box measured under 2; a button's highlight measured about 5, and a sheet
+ * rising tens.
  */
-export function parseMotion(output: string, threshold = motionThreshold): number[] {
+export const touchMotionThreshold = 3;
+
+/** The side of the box around a touch that its response is looked for in, over the frame's width. */
+export const touchBox = 0.12;
+
+/**
+ * Reads the output of `tblend=all_mode=difference,signalstats,metadata=print:key=…`: the times
+ * of frames that differ from the one before, by the frame's largest difference (`YMAX`) or its
+ * average (`YAVG`). ffmpeg writes a tiny average in exponent notation, such as `8.01154e-05`.
+ */
+export function parseMotion(
+  output: string,
+  threshold = motionThreshold,
+  statistic: 'YMAX' | 'YAVG' = 'YMAX'
+): number[] {
   const moving: number[] = [];
+  const pattern = new RegExp(`signalstats\\.${statistic}=([\\d.]+(?:e[-+]?\\d+)?)`);
   let time: number | undefined;
   for (const line of output.split('\n')) {
     const frame = /pts_time:([\d.]+)/.exec(line);
-    const difference = /signalstats\.YMAX=([\d.]+)/.exec(line);
+    const difference = pattern.exec(line);
     if (frame?.[1]) time = Number(frame[1]);
     else if (difference?.[1] && time !== undefined && Number(difference[1]) >= threshold) {
       moving.push(time);
@@ -106,13 +123,44 @@ export function shiftTake(take: Take, lag: number): Take {
   };
 }
 
+/** Whether `segment`'s action made `tap`: the tap is in its scene, after the action began. */
+function madeBy(
+  tap: Take['taps'][number],
+  segment: Segment
+): segment is Segment & {
+  activity: NonNullable<Segment['activity']>;
+} {
+  const { activity } = segment;
+  return (
+    activity !== undefined &&
+    tap.scene === segment.scene &&
+    tap.time >= activity.start &&
+    tap.time <= segment.end
+  );
+}
+
+/** For each tap, the window of the action that made it, if any; the last such action's. */
+export function tapActivities(take: Take): (NonNullable<Segment['activity']> | undefined)[] {
+  return take.taps.map(
+    (tap) => take.segments.findLast((segment) => madeBy(tap, segment))?.activity
+  );
+}
+
 /**
  * Narrows each action's stretch to what it changed on screen: from its landing before the first
  * moving frame during the action to its settle after the last. A tap made by the action is marked
- * at that first moving frame, where the touch lands, and a drag starts moving there. Stretches whose action changed nothing keep
- * the times the test gave them. Expects a take already on the footage's clock.
+ * at the first frame during the action that changed around the touch, from `movingNearTaps` (one
+ * list for each tap), or failing that at the first moving frame anywhere, and a drag starts
+ * moving at the first moving frame. Looking near the touch keeps a tap's mark on the app's
+ * response when something else on screen, such as a shimmer or a playing video, keeps changing.
+ * Stretches whose action changed nothing keep the times the test gave them. Expects a take
+ * already on the footage's clock.
  */
-export function narrowToMotion(take: Take, moving: number[]): Take {
+export function narrowToMotion(
+  take: Take,
+  moving: number[],
+  movingNearTaps: (number[] | undefined)[] = []
+): Take {
   const taps = [...take.taps];
   const drags = [...take.drags];
   const segments = take.segments.map((segment) => {
@@ -124,8 +172,11 @@ export function narrowToMotion(take: Take, moving: number[]): Take {
     if (first === undefined || last === undefined) return segment;
 
     taps.forEach((tap, index) => {
-      if (tap.scene === segment.scene && tap.time >= activity.start && tap.time <= segment.end) {
-        taps[index] = { ...tap, time: first };
+      if (madeBy(tap, segment)) {
+        const nearTouch = movingNearTaps[index]?.find(
+          (time) => time >= activity.start && time <= activity.end
+        );
+        taps[index] = { ...tap, time: nearTouch ?? first };
       }
     });
     drags.forEach((drag, index) => {
