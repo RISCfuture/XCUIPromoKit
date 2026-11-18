@@ -96,7 +96,7 @@ extension PromoTake {
       let point = control.frame.center
       control.tap()
       noteTap(at: point)
-      let opened = option.waitForExistence(timeout: ScaledTimeouts.short)
+      let opened = option.wait(timeout: ScaledTimeouts.short)
       Thread.sleep(forTimeInterval: seconds)
       return opened
     }
