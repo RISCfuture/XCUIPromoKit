@@ -13,9 +13,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  route:
+    uses: RISCfuture/ci-workflows/.github/workflows/minerva-route.yml@1.1.0
+    permissions:
+      contents: read
   build:
     name: Build Documentation
-    runs-on: macos-latest
+    needs: route
+    runs-on: ${{ fromJSON(needs.route.outputs.macos-latest) }}
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: maxim-lobanov/setup-xcode@v1.7.0

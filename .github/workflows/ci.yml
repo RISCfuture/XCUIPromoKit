@@ -12,6 +12,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  route:
+    uses: RISCfuture/ci-workflows/.github/workflows/minerva-route.yml@1.1.0
+    permissions:
+      contents: read
   tests:
     name: Build and Test
     # XCUIPromoKit links XCUIApplication/XCUIElement, which ship with Xcode's
@@ -21,7 +25,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-15, macos-26]
-    runs-on: ${{ matrix.os }}
+    needs: route
+    runs-on: ${{ (matrix.os == 'macos-26' || matrix.os == 'macos-latest') && fromJSON(needs.route.outputs[matrix.os]) || matrix.os }}
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: maxim-lobanov/setup-xcode@v1.7.0
@@ -43,7 +48,8 @@ jobs:
         run: swift test -v
   lint:
     name: Run SwiftLint
-    runs-on: macos-latest
+    needs: route
+    runs-on: ${{ fromJSON(needs.route.outputs.macos-latest) }}
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Install SwiftLint
@@ -65,7 +71,8 @@ jobs:
         run: swift format lint --strict -r .
   documentation:
     name: Build Documentation
-    runs-on: macos-latest
+    needs: route
+    runs-on: ${{ fromJSON(needs.route.outputs.macos-latest) }}
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: maxim-lobanov/setup-xcode@v1.7.0
